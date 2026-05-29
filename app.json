@@ -1,0 +1,60 @@
+{
+  "expo": {
+    "name": "SPARKFIT",
+    "slug": "sparkfit",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "sparkfit",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.sparkfit.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.sparkfit.app",
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "experiments": {
+      "typedRoutes": true
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "SPARKFIT 需要相機權限以拍攝身材照片"
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "SPARKFIT 需要相簿權限以儲存照片",
+          "savePhotosPermission": "SPARKFIT 需要儲存照片到相簿"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "SPARKFIT 需要相簿存取權限以選取照片"
+        }
+      ]
+    ]
+  }
+}
