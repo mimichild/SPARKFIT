@@ -9,8 +9,12 @@ type Theme = 'light' | 'dark' | 'auto';
 interface SettingsState {
   theme: Theme;
   themeColor: string;
+  height: number | null;
+  targetWeight: number | null;
   setTheme: (theme: Theme) => void;
   setThemeColor: (color: string) => void;
+  setHeight: (h: number | null) => void;
+  setTargetWeight: (w: number | null) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -18,8 +22,12 @@ export const useSettingsStore = create<SettingsState>()(
     (set) => ({
       theme: 'auto',
       themeColor: DEFAULT_THEME_COLOR,
+      height: null,
+      targetWeight: null,
       setTheme: (theme) => set({ theme }),
       setThemeColor: (themeColor) => set({ themeColor }),
+      setHeight: (height) => set({ height }),
+      setTargetWeight: (targetWeight) => set({ targetWeight }),
     }),
     {
       name: STORAGE_KEYS.SETTINGS,
