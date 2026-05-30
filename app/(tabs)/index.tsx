@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, Modal, Platform,
@@ -8,7 +8,9 @@ import { StatusBar } from 'expo-status-bar';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 import { useSettingsStore } from '@/stores/settingsStore';
+import { useMeasurements, type Measurement } from '@/hooks/useMeasurements';
 import { MeasurementCard } from '@/components/MeasurementCard';
+import { AddDataModal } from '@/components/AddDataModal';
 import { Colors } from '@/constants/colors';
 
 const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六'];
@@ -17,17 +19,50 @@ function formatDate(d: Date): string {
   return `${d.getFullYear()} 年 ${d.getMonth() + 1} 月 ${d.getDate()} 日（${WEEKDAYS[d.getDay()]}）`;
 }
 
+function toDateKey(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function buildGoalHint(targetWeight: number | null, currentWeight: number | null | undefined): string {
+  const tw = targetWeight != null ? `${targetWeight}` : '__';
+  if (targetWeight != null && currentWeight != null) {
+    const diff = Math.abs(currentWeight - targetWeight).toFixed(1);
+    return `目標體重 ${tw} kg，只差 ${diff} kg！`;
+  }
+  return `目標體重 ${tw} kg，只差 __ kg！`;
+}
+
 export default function DataScreen() {
-  const themeColor = useSettingsStore((s) => s.themeColor);
+  const themeColor = useSettingsStore(s => s.themeColor);
+  const targetWeight = useSettingsStore(s => s.targetWeight);
 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [tempDate, setTempDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [measurement, setMeasurement] = useState<Measurement | null>(null);
+
+  const { getMeasurement } = useMeasurements();
+  const dateKey = toDateKey(selectedDate);
+
+  const loadMeasurement = useCallback(async () => {
+    const m = await getMeasurement(dateKey);
+    setMeasurement(m);
+  }, [dateKey, getMeasurement]);
+
+  useEffect(() => {
+    loadMeasurement();
+  }, [loadMeasurement]);
 
   const openPicker = () => {
     setTempDate(selectedDate);
     setShowPicker(true);
   };
+
+  const w = measurement?.weight ?? null;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -52,43 +87,56 @@ export default function DataScreen() {
             </View>
           </View>
           <View style={styles.heroValueRow}>
-            <Text style={styles.heroValue}>──</Text>
+            <Text style={styles.heroValue}>{w != null ? w.toFixed(1) : '──'}</Text>
             <Text style={styles.heroUnit}>kg</Text>
           </View>
-          <Text style={styles.heroHint}>尚無紀錄，點擊 + 開始記錄</Text>
+          {w == null && (
+            <Text style={styles.heroHint}>尚無紀錄，點擊 + 開始記錄</Text>
+          )}
         </View>
+
+        {/* ── 目標體重提示 ── */}
+        <Text style={styles.goalHint}>{buildGoalHint(targetWeight, w)}</Text>
 
         {/* ── 身體尺寸 ── */}
         <Text style={styles.sectionTitle}>身體尺寸</Text>
         <View style={styles.grid}>
-          <MeasurementCard label="胸圍" value={null} unit="cm" />
-          <MeasurementCard label="腰圍" value={null} unit="cm" />
+          <MeasurementCard label="胸圍" value={measurement?.chest ?? null} unit="cm" />
+          <MeasurementCard label="腰圍" value={measurement?.waist ?? null} unit="cm" />
         </View>
         <View style={styles.grid}>
-          <MeasurementCard label="低腰圍" value={null} unit="cm" />
-          <MeasurementCard label="臀圍" value={null} unit="cm" />
+          <MeasurementCard label="低腰圍" value={measurement?.low_waist ?? null} unit="cm" />
+          <MeasurementCard label="臀圍" value={measurement?.hip ?? null} unit="cm" />
         </View>
         <View style={styles.grid}>
-          <MeasurementCard label="大腿" value={null} unit="cm" />
-          <MeasurementCard label="手臂" value={null} unit="cm" />
+          <MeasurementCard label="大腿" value={measurement?.thigh ?? null} unit="cm" />
+          <MeasurementCard label="手臂" value={measurement?.arm ?? null} unit="cm" />
         </View>
 
         {/* ── 身體組成 ── */}
-        <Text style={styles.sectionTitle}>身體組成（選填）</Text>
+        <Text style={styles.sectionTitle}>身體組成</Text>
         <View style={styles.grid}>
-          <MeasurementCard label="BMI" value={null} unit="" />
-          <MeasurementCard label="體脂率" value={null} unit="%" />
+          <MeasurementCard label="BMI" value={measurement?.bmi ?? null} unit="" />
+          <MeasurementCard label="基礎代謝" value={measurement?.bmr ?? null} unit="kcal" />
         </View>
         <View style={styles.grid}>
-          <MeasurementCard label="內臟脂肪" value={null} unit="" />
-          <MeasurementCard label="基礎代謝" value={null} unit="kcal" />
+          <MeasurementCard label="體脂肪率" value={measurement?.body_fat_rate ?? null} unit="%" />
+          <MeasurementCard label="體脂肪重" value={measurement?.body_fat_weight ?? null} unit="kg" />
         </View>
         <View style={styles.grid}>
-          <MeasurementCard label="肌肉重" value={null} unit="kg" />
-          <MeasurementCard label="骨骼率" value={null} unit="%" />
+          <MeasurementCard label="肌肉重" value={measurement?.muscle_weight ?? null} unit="kg" />
+          <MeasurementCard label="骨骼重" value={measurement?.bone_weight ?? null} unit="kg" />
         </View>
         <View style={styles.grid}>
-          <MeasurementCard label="體年齡" value={null} unit="歲" />
+          <MeasurementCard label="內臟脂肪" value={measurement?.visceral_fat ?? null} unit="" />
+          <MeasurementCard label="體年齡" value={measurement?.body_age ?? null} unit="歲" />
+        </View>
+        <View style={styles.grid}>
+          <MeasurementCard label="腰臀比" value={measurement?.waist_hip_ratio ?? null} unit="" />
+          <MeasurementCard label="肥胖度" value={measurement?.obesity_degree ?? null} unit="%" />
+        </View>
+        <View style={styles.grid}>
+          <MeasurementCard label="建議熱量攝取" value={measurement?.recommended_calories ?? null} unit="kcal" />
           <View style={{ flex: 1, margin: 4 }} />
         </View>
 
@@ -99,9 +147,19 @@ export default function DataScreen() {
       <TouchableOpacity
         style={[styles.fab, { backgroundColor: themeColor }]}
         activeOpacity={0.85}
+        onPress={() => setShowAddModal(true)}
       >
         <Text style={styles.fabText}>＋</Text>
       </TouchableOpacity>
+
+      {/* ── 新增數據 Modal ── */}
+      <AddDataModal
+        visible={showAddModal}
+        themeColor={themeColor}
+        selectedDate={dateKey}
+        onClose={() => setShowAddModal(false)}
+        onSaved={loadMeasurement}
+      />
 
       {/* ── iOS 日期選擇器 Modal ── */}
       {Platform.OS === 'ios' && (
@@ -177,7 +235,7 @@ const styles = StyleSheet.create({
   heroCard: {
     borderRadius: 20,
     padding: 22,
-    marginBottom: 28,
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
@@ -231,6 +289,14 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
 
+  // Goal hint
+  goalHint: {
+    fontSize: 13,
+    color: '#AAAAAA',
+    marginBottom: 16,
+    marginTop: 4,
+  },
+
   // Sections
   sectionTitle: {
     fontSize: 15,
@@ -247,7 +313,7 @@ const styles = StyleSheet.create({
   // FAB
   fab: {
     position: 'absolute',
-    bottom: 80,
+    bottom: 50,
     right: 24,
     width: 58,
     height: 58,
