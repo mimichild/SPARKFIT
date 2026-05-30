@@ -56,5 +56,16 @@ export function useMeasurements() {
     [db],
   );
 
-  return { getMeasurement, saveMeasurement };
+  const getMeasurements = useCallback(
+    async (startDate: string, endDate: string): Promise<Measurement[]> => {
+      const results = await db.getAllAsync<Measurement>(
+        'SELECT * FROM measurements WHERE date >= ? AND date <= ? ORDER BY date ASC',
+        [startDate, endDate],
+      );
+      return results;
+    },
+    [db],
+  );
+
+  return { getMeasurement, getMeasurements, saveMeasurement };
 }
