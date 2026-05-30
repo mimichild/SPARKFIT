@@ -10,6 +10,8 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useMeasurements, type Measurement } from '@/hooks/useMeasurements';
 import { MeasurementCard } from '@/components/MeasurementCard';
+import { Ionicons } from '@expo/vector-icons';
+
 import { AddDataModal } from '@/components/AddDataModal';
 import { Colors } from '@/constants/colors';
 
@@ -43,6 +45,7 @@ export default function DataScreen() {
   const [tempDate, setTempDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [measurement, setMeasurement] = useState<Measurement | null>(null);
 
   const { getMeasurement } = useMeasurements();
@@ -101,62 +104,72 @@ export default function DataScreen() {
         {/* ── 身體尺寸 ── */}
         <Text style={styles.sectionTitle}>身體尺寸</Text>
         <View style={styles.grid}>
-          <MeasurementCard label="胸圍" value={measurement?.chest ?? null} unit="cm" />
-          <MeasurementCard label="腰圍" value={measurement?.waist ?? null} unit="cm" />
+          <MeasurementCard label="胸圍" value={measurement?.chest ?? null} unit="cm" valueColor={themeColor} />
+          <MeasurementCard label="腰圍" value={measurement?.waist ?? null} unit="cm" valueColor={themeColor} />
         </View>
         <View style={styles.grid}>
-          <MeasurementCard label="低腰圍" value={measurement?.low_waist ?? null} unit="cm" />
-          <MeasurementCard label="臀圍" value={measurement?.hip ?? null} unit="cm" />
+          <MeasurementCard label="低腰圍" value={measurement?.low_waist ?? null} unit="cm" valueColor={themeColor} />
+          <MeasurementCard label="臀圍" value={measurement?.hip ?? null} unit="cm" valueColor={themeColor} />
         </View>
         <View style={styles.grid}>
-          <MeasurementCard label="大腿" value={measurement?.thigh ?? null} unit="cm" />
-          <MeasurementCard label="手臂" value={measurement?.arm ?? null} unit="cm" />
+          <MeasurementCard label="大腿" value={measurement?.thigh ?? null} unit="cm" valueColor={themeColor} />
+          <MeasurementCard label="手臂" value={measurement?.arm ?? null} unit="cm" valueColor={themeColor} />
         </View>
 
         {/* ── 身體組成 ── */}
         <Text style={styles.sectionTitle}>身體組成</Text>
         <View style={styles.grid}>
-          <MeasurementCard label="BMI" value={measurement?.bmi ?? null} unit="" />
-          <MeasurementCard label="基礎代謝" value={measurement?.bmr ?? null} unit="kcal" />
+          <MeasurementCard label="BMI" value={measurement?.bmi ?? null} unit="" valueColor={themeColor} />
+          <MeasurementCard label="基礎代謝" value={measurement?.bmr ?? null} unit="kcal" valueColor={themeColor} />
         </View>
         <View style={styles.grid}>
-          <MeasurementCard label="體脂肪率" value={measurement?.body_fat_rate ?? null} unit="%" />
-          <MeasurementCard label="體脂肪重" value={measurement?.body_fat_weight ?? null} unit="kg" />
+          <MeasurementCard label="體脂肪率" value={measurement?.body_fat_rate ?? null} unit="%" valueColor={themeColor} />
+          <MeasurementCard label="體脂肪重" value={measurement?.body_fat_weight ?? null} unit="kg" valueColor={themeColor} />
         </View>
         <View style={styles.grid}>
-          <MeasurementCard label="肌肉重" value={measurement?.muscle_weight ?? null} unit="kg" />
-          <MeasurementCard label="骨骼重" value={measurement?.bone_weight ?? null} unit="kg" />
+          <MeasurementCard label="肌肉重" value={measurement?.muscle_weight ?? null} unit="kg" valueColor={themeColor} />
+          <MeasurementCard label="骨骼重" value={measurement?.bone_weight ?? null} unit="kg" valueColor={themeColor} />
         </View>
         <View style={styles.grid}>
-          <MeasurementCard label="內臟脂肪" value={measurement?.visceral_fat ?? null} unit="" />
-          <MeasurementCard label="體年齡" value={measurement?.body_age ?? null} unit="歲" />
+          <MeasurementCard label="內臟脂肪" value={measurement?.visceral_fat ?? null} unit="" valueColor={themeColor} />
+          <MeasurementCard label="體年齡" value={measurement?.body_age ?? null} unit="歲" valueColor={themeColor} />
         </View>
         <View style={styles.grid}>
-          <MeasurementCard label="腰臀比" value={measurement?.waist_hip_ratio ?? null} unit="" />
-          <MeasurementCard label="肥胖度" value={measurement?.obesity_degree ?? null} unit="%" />
+          <MeasurementCard label="腰臀比" value={measurement?.waist_hip_ratio ?? null} unit="" valueColor={themeColor} />
+          <MeasurementCard label="肥胖度" value={measurement?.obesity_degree ?? null} unit="%" valueColor={themeColor} />
         </View>
         <View style={styles.grid}>
-          <MeasurementCard label="建議熱量攝取" value={measurement?.recommended_calories ?? null} unit="kcal" />
+          <MeasurementCard label="建議熱量攝取" value={measurement?.recommended_calories ?? null} unit="kcal" valueColor={themeColor} />
           <View style={{ flex: 1, margin: 4 }} />
         </View>
 
         <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* ── FAB ── */}
+      {/* ── FAB 新增 ── */}
       <TouchableOpacity
         style={[styles.fab, { backgroundColor: themeColor }]}
         activeOpacity={0.85}
-        onPress={() => setShowAddModal(true)}
+        onPress={() => { setModalMode('add'); setShowAddModal(true); }}
       >
         <Text style={styles.fabText}>＋</Text>
       </TouchableOpacity>
 
-      {/* ── 新增數據 Modal ── */}
+      {/* ── FAB 編輯 ── */}
+      <TouchableOpacity
+        style={[styles.editBtn, { backgroundColor: themeColor }]}
+        activeOpacity={0.85}
+        onPress={() => { setModalMode('edit'); setShowAddModal(true); }}
+      >
+        <Ionicons name="pencil" size={24} color="#FFFFFF" />
+      </TouchableOpacity>
+
+      {/* ── 新增／修改數據 Modal ── */}
       <AddDataModal
         visible={showAddModal}
         themeColor={themeColor}
         selectedDate={dateKey}
+        mode={modalMode}
         onClose={() => setShowAddModal(false)}
         onSaved={loadMeasurement}
       />
@@ -313,7 +326,7 @@ const styles = StyleSheet.create({
   // FAB
   fab: {
     position: 'absolute',
-    bottom: 50,
+    bottom: 120,
     right: 24,
     width: 58,
     height: 58,
@@ -330,6 +343,21 @@ const styles = StyleSheet.create({
     fontSize: 28,
     color: '#FFFFFF',
     lineHeight: 32,
+  },
+  editBtn: {
+    position: 'absolute',
+    bottom: 50,
+    right: 24,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
   },
 
   // Date picker modal (iOS)

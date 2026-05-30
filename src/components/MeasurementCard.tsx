@@ -5,15 +5,20 @@ type Props = {
   label: string;
   value: number | null;
   unit: string;
+  valueColor?: string;
 };
 
-export function MeasurementCard({ label, value, unit }: Props) {
+export function MeasurementCard({ label, value, unit, valueColor }: Props) {
   const hasValue = value !== null;
 
   return (
     <View style={styles.card}>
       <Text style={styles.label}>{label}</Text>
-      <Text style={[styles.value, !hasValue && styles.valuePlaceholder]}>
+      <Text style={[
+        styles.value,
+        !hasValue && styles.valuePlaceholder,
+        hasValue && valueColor ? { color: valueColor } : undefined,
+      ]}>
         {hasValue ? value.toFixed(1) : '──'}
       </Text>
       {unit ? <Text style={styles.unit}>{unit}</Text> : null}

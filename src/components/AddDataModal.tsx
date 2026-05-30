@@ -12,6 +12,7 @@ type Props = {
   visible: boolean;
   themeColor: string;
   selectedDate: string;
+  mode?: 'add' | 'edit';
   onClose: () => void;
   onSaved: () => void;
 };
@@ -56,7 +57,7 @@ function toStr(n: number | null | undefined): string {
   return n != null ? String(n) : '';
 }
 
-export function AddDataModal({ visible, themeColor, selectedDate, onClose, onSaved }: Props) {
+export function AddDataModal({ visible, themeColor, selectedDate, mode = 'add', onClose, onSaved }: Props) {
   const height = useSettingsStore(s => s.height);
   const targetWeight = useSettingsStore(s => s.targetWeight);
   const setHeight = useSettingsStore(s => s.setHeight);
@@ -66,30 +67,38 @@ export function AddDataModal({ visible, themeColor, selectedDate, onClose, onSav
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
 
   const loadData = useCallback(async () => {
-    const m = await getMeasurement(selectedDate);
-    setForm({
-      height: toStr(height),
-      targetWeight: toStr(targetWeight),
-      weight: toStr(m?.weight),
-      chest: toStr(m?.chest),
-      waist: toStr(m?.waist),
-      lowWaist: toStr(m?.low_waist),
-      hip: toStr(m?.hip),
-      thigh: toStr(m?.thigh),
-      arm: toStr(m?.arm),
-      bmi: toStr(m?.bmi),
-      bmr: toStr(m?.bmr),
-      bodyFatRate: toStr(m?.body_fat_rate),
-      bodyFatWeight: toStr(m?.body_fat_weight),
-      muscleWeight: toStr(m?.muscle_weight),
-      boneWeight: toStr(m?.bone_weight),
-      visceralFat: toStr(m?.visceral_fat),
-      bodyAge: toStr(m?.body_age),
-      waistHipRatio: toStr(m?.waist_hip_ratio),
-      obesityDegree: toStr(m?.obesity_degree),
-      recommendedCalories: toStr(m?.recommended_calories),
-    });
-  }, [selectedDate, height, targetWeight, getMeasurement]);
+    if (mode === 'edit') {
+      const m = await getMeasurement(selectedDate);
+      setForm({
+        height: toStr(height),
+        targetWeight: toStr(targetWeight),
+        weight: toStr(m?.weight),
+        chest: toStr(m?.chest),
+        waist: toStr(m?.waist),
+        lowWaist: toStr(m?.low_waist),
+        hip: toStr(m?.hip),
+        thigh: toStr(m?.thigh),
+        arm: toStr(m?.arm),
+        bmi: toStr(m?.bmi),
+        bmr: toStr(m?.bmr),
+        bodyFatRate: toStr(m?.body_fat_rate),
+        bodyFatWeight: toStr(m?.body_fat_weight),
+        muscleWeight: toStr(m?.muscle_weight),
+        boneWeight: toStr(m?.bone_weight),
+        visceralFat: toStr(m?.visceral_fat),
+        bodyAge: toStr(m?.body_age),
+        waistHipRatio: toStr(m?.waist_hip_ratio),
+        obesityDegree: toStr(m?.obesity_degree),
+        recommendedCalories: toStr(m?.recommended_calories),
+      });
+    } else {
+      setForm({
+        ...EMPTY_FORM,
+        height: toStr(height),
+        targetWeight: toStr(targetWeight),
+      });
+    }
+  }, [mode, selectedDate, height, targetWeight, getMeasurement]);
 
   useEffect(() => {
     if (visible) loadData();
@@ -149,7 +158,7 @@ export function AddDataModal({ visible, themeColor, selectedDate, onClose, onSav
             <TouchableOpacity onPress={onClose} hitSlop={12}>
               <Text style={styles.headerCancel}>取消</Text>
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>新增數據</Text>
+            <Text style={styles.headerTitle}>{mode === 'edit' ? '修改數據' : '新增數據'}</Text>
             <TouchableOpacity onPress={handleSave} hitSlop={12}>
               <Text style={[styles.headerSave, { color: themeColor }]}>儲存</Text>
             </TouchableOpacity>
