@@ -67,5 +67,12 @@ export function useMeasurements() {
     [db],
   );
 
-  return { getMeasurement, getMeasurements, saveMeasurement };
+  const getLatestMeasurement = useCallback(async (): Promise<Measurement | null> => {
+    const result = await db.getFirstAsync<Measurement>(
+      'SELECT * FROM measurements ORDER BY date DESC LIMIT 1',
+    );
+    return result ?? null;
+  }, [db]);
+
+  return { getMeasurement, getMeasurements, getLatestMeasurement, saveMeasurement };
 }

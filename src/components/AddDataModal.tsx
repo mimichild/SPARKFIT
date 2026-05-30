@@ -19,6 +19,7 @@ type Props = {
 
 type FormData = {
   height: string;
+  shoulderWidth: string;
   targetWeight: string;
   weight: string;
   chest: string;
@@ -41,7 +42,7 @@ type FormData = {
 };
 
 const EMPTY_FORM: FormData = {
-  height: '', targetWeight: '', weight: '',
+  height: '', shoulderWidth: '', targetWeight: '', weight: '',
   chest: '', waist: '', lowWaist: '', hip: '', thigh: '', arm: '',
   bmi: '', bmr: '', bodyFatRate: '', bodyFatWeight: '',
   muscleWeight: '', boneWeight: '', visceralFat: '', bodyAge: '',
@@ -59,8 +60,10 @@ function toStr(n: number | null | undefined): string {
 
 export function AddDataModal({ visible, themeColor, selectedDate, mode = 'add', onClose, onSaved }: Props) {
   const height = useSettingsStore(s => s.height);
+  const shoulderWidth = useSettingsStore(s => s.shoulderWidth);
   const targetWeight = useSettingsStore(s => s.targetWeight);
   const setHeight = useSettingsStore(s => s.setHeight);
+  const setShoulderWidth = useSettingsStore(s => s.setShoulderWidth);
   const setTargetWeight = useSettingsStore(s => s.setTargetWeight);
 
   const { getMeasurement, saveMeasurement } = useMeasurements();
@@ -71,6 +74,7 @@ export function AddDataModal({ visible, themeColor, selectedDate, mode = 'add', 
       const m = await getMeasurement(selectedDate);
       setForm({
         height: toStr(height),
+        shoulderWidth: toStr(shoulderWidth),
         targetWeight: toStr(targetWeight),
         weight: toStr(m?.weight),
         chest: toStr(m?.chest),
@@ -95,10 +99,11 @@ export function AddDataModal({ visible, themeColor, selectedDate, mode = 'add', 
       setForm({
         ...EMPTY_FORM,
         height: toStr(height),
+        shoulderWidth: toStr(shoulderWidth),
         targetWeight: toStr(targetWeight),
       });
     }
-  }, [mode, selectedDate, height, targetWeight, getMeasurement]);
+  }, [mode, selectedDate, height, shoulderWidth, targetWeight, getMeasurement]);
 
   useEffect(() => {
     if (visible) loadData();
@@ -114,8 +119,10 @@ export function AddDataModal({ visible, themeColor, selectedDate, mode = 'add', 
     }
 
     const newHeight = toNum(form.height);
+    const newShoulderWidth = toNum(form.shoulderWidth);
     const newTargetWeight = toNum(form.targetWeight);
     if (newHeight !== height) setHeight(newHeight);
+    if (newShoulderWidth !== shoulderWidth) setShoulderWidth(newShoulderWidth);
     if (newTargetWeight !== targetWeight) setTargetWeight(newTargetWeight);
 
     const m: Measurement = {
@@ -171,6 +178,7 @@ export function AddDataModal({ visible, themeColor, selectedDate, mode = 'add', 
           >
             <SectionHeader title="基本資料" subtitle="記錄一次即可" />
             <Field label="身高" value={form.height} onChange={set('height')} unit="cm" />
+            <Field label="肩寬" value={form.shoulderWidth} onChange={set('shoulderWidth')} unit="cm" />
             <Field label="目標體重" value={form.targetWeight} onChange={set('targetWeight')} unit="kg" />
 
             <SectionHeader title="身體尺寸" />
