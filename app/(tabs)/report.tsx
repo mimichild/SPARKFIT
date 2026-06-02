@@ -14,6 +14,7 @@ import { Colors } from '@/constants/colors';
 
 const SCREEN_W = Dimensions.get('window').width;
 const CHART_W = SCREEN_W - 40;
+const NICE_STEPS = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000];
 
 type Mode = 'single' | 'range';
 type DateTarget = 'single' | 'start' | 'end';
@@ -131,11 +132,81 @@ export default function ReportScreen() {
   const metricInfo = METRICS.find(m => m.key === selectedMetric)!;
   const rgb = hexToRgb(themeColor);
 
+  // Nice Y-axis: find smallest magnitude-appropriate step giving ≤8 segments
+  const niceYAxis = useMemo(() => {
+    if (chartValues.length === 0) {
+      return { niceMin: 0, step: 1, segments: 4, scaledMax: 4, decimalPlaces: 0 };
+    }
+    const dataMin = Math.min(...chartValues);
+    const dataMax = Math.max(...chartValues);
+    const avg = (dataMin + dataMax) / 2;
+
+    // Magnitude-appropriate starting step
+    let startIdx = 3; // default: step=1
+    if (avg >= 1000) startIdx = 9;       // step=100
+    else if (avg >= 100) startIdx = 6;   // step=10
+    else if (avg >= 10) startIdx = 3;    // step=1
+    else if (avg >= 1) startIdx = 2;     // step=0.5
+    else startIdx = 0;                   // step=0.1
+
+    for (let i = startIdx; i < NICE_STEPS.length; i++) {
+      const s = NICE_STEPS[i];
+      const nMin = Math.max(0, Math.floor(dataMin / s) * s - 2 * s);
+      const nMax = Math.ceil(dataMax / s) * s + 2 * s;
+      const segs = Math.round((nMax - nMin) / s);
+      if (segs <= 8) {
+        return { niceMin: nMin, step: s, segments: segs, scaledMax: segs, decimalPlaces: s < 1 ? 1 : 0 };
+      }
+    }
+    return { niceMin: 0, step: 1, segments: 4, scaledMax: 4, decimalPlaces: 0 };
+  }, [chartValues]);
+
+  // Scale data to [0, scaledMax]; add tiny epsilon when all values identical
+  // so the library never collapses to a single Y label (its min===max guard)
+  const scaledValues = useMemo(() => {
+    const raw = chartValues.map(v => (v - niceYAxis.niceMin) / niceYAxis.step);
+    if (raw.length >= 2 && raw.every(v => v === raw[0])) {
+      return [...raw.slice(0, -1), raw[raw.length - 1] + 1e-4];
+    }
+    return raw;
+  }, [chartValues, niceYAxis]);
+
+  // Custom Y-axis labels: positions derived from chart-kit's known geometry
+  // drawH = height * DEFAULT_X_LABELS_HEIGHT_PERCENTAGE = 220 * 0.75 = 165
+  // padT  = style.paddingTop (default 16 in chart-kit source)
+  const yAxisLabels = useMemo(() => {
+    const drawH = 220 * 0.75;
+    const padT = 16;
+    return Array.from({ length: niceYAxis.segments + 1 }, (_, i) => {
+      const value = niceYAxis.niceMin + i * niceYAxis.step;
+      const yPos = drawH - (drawH / niceYAxis.segments) * i + padT;
+      return {
+        top: Math.round(yPos - 5),
+        label: niceYAxis.decimalPlaces > 0
+          ? value.toFixed(1)
+          : String(Math.round(value)),
+      };
+    });
+  }, [niceYAxis]);
+
+  // X-axis: thin labels when many points, rotate when > 8
+  const { visibleLabels, labelRotation } = useMemo(() => {
+    const n = chartLabels.length;
+    if (n <= 8) return { visibleLabels: chartLabels, labelRotation: 0 };
+    const step = Math.ceil(n / 10);
+    return {
+      visibleLabels: chartLabels.map((l, i) =>
+        (i % step === 0 || i === n - 1) ? l : '',
+      ),
+      labelRotation: -30,
+    };
+  }, [chartLabels]);
+
   const chartConfig = useMemo(() => ({
     backgroundColor: '#FFFFFF',
     backgroundGradientFrom: '#FFFFFF',
     backgroundGradientTo: '#FFFFFF',
-    decimalPlaces: 1,
+    decimalPlaces: 0,
     color: (opacity = 1) => `rgba(${rgb}, ${opacity})`,
     labelColor: () => Colors.textSecondary,
     propsForDots: { r: '5', strokeWidth: '0', fill: themeColor },
@@ -260,9 +331,12 @@ export default function ReportScreen() {
                 <Text style={styles.chartTitle}>
                   {metricInfo.label}{metricInfo.unit ? `（${metricInfo.unit}）` : ''}
                 </Text>
-                <View style={styles.chartWrap}>
+                <View style={[styles.chartWrap, { position: 'relative' }]}>
                   <LineChart
-                    data={{ labels: chartLabels, datasets: [{ data: chartValues }] }}
+                    data={{
+                      labels: visibleLabels,
+                      datasets: [{ data: scaledValues }],
+                    }}
                     width={CHART_W - 32}
                     height={220}
                     chartConfig={chartConfig}
@@ -271,17 +345,44 @@ export default function ReportScreen() {
                     withShadow={false}
                     withInnerLines
                     withOuterLines={false}
-                    fromZero={false}
+                    withHorizontalLabels={false}
+                    fromZero
+                    fromNumber={niceYAxis.scaledMax}
+                    segments={niceYAxis.segments}
+                    horizontalLabelRotation={labelRotation}
                     style={styles.chart}
-                    renderDotContent={({ x, y, index, indexData }) => (
-                      <Text
-                        key={index}
-                        style={[styles.dotLabel, { left: x - 18, top: y - 22, color: themeColor }]}
-                      >
-                        {Number.isInteger(indexData) ? indexData : indexData.toFixed(1)}
-                      </Text>
-                    )}
+                    renderDotContent={({ x, y, index }) => {
+                      const val = chartValues[index];
+                      if (val == null) return null;
+                      return (
+                        <Text
+                          key={index}
+                          style={[styles.dotLabel, { left: x - 18, top: y - 22, color: themeColor }]}
+                        >
+                          {Number.isInteger(val) ? val : val.toFixed(1)}
+                        </Text>
+                      );
+                    }}
                   />
+                  {/* Custom Y-axis labels overlaid on chart's built-in left padding area */}
+                  <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
+                    {yAxisLabels.map(({ top, label }, i) => (
+                      <Text
+                        key={i}
+                        style={{
+                          position: 'absolute',
+                          top,
+                          left: 0,
+                          width: 56,
+                          textAlign: 'right',
+                          fontSize: 10,
+                          color: Colors.textSecondary,
+                        }}
+                      >
+                        {label}
+                      </Text>
+                    ))}
+                  </View>
                 </View>
               </View>
             )}
