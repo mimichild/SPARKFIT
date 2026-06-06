@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { GestureDetector } from 'react-native-gesture-handler';
+import { useSwipeToHome } from '@/hooks/useSwipeToHome';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, Dimensions, Modal, Platform,
@@ -70,6 +72,7 @@ function makeDefaultStart(): Date {
 }
 
 export default function ReportScreen() {
+  const swipeGesture = useSwipeToHome();
   const themeColor = useSettingsStore(s => s.themeColor);
   const { getMeasurement, getMeasurements } = useMeasurements();
 
@@ -215,6 +218,7 @@ export default function ReportScreen() {
   }), [themeColor, rgb]);
 
   return (
+    <GestureDetector gesture={swipeGesture}>
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -434,6 +438,7 @@ export default function ReportScreen() {
         />
       )}
     </SafeAreaView>
+    </GestureDetector>
   );
 }
 

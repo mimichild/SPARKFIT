@@ -3,6 +3,8 @@ import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, Modal, Platform,
 } from 'react-native';
+import { GestureDetector } from 'react-native-gesture-handler';
+import { useSwipeToHome } from '@/hooks/useSwipeToHome';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -38,6 +40,7 @@ function buildGoalHint(targetWeight: number | null, currentWeight: number | null
 }
 
 export default function DataScreen() {
+  const swipeGesture = useSwipeToHome();
   const themeColor = useSettingsStore(s => s.themeColor);
   const targetWeight = useSettingsStore(s => s.targetWeight);
 
@@ -68,6 +71,7 @@ export default function DataScreen() {
   const w = measurement?.weight ?? null;
 
   return (
+    <GestureDetector gesture={swipeGesture}>
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
 
@@ -218,6 +222,7 @@ export default function DataScreen() {
         />
       )}
     </SafeAreaView>
+    </GestureDetector>
   );
 }
 

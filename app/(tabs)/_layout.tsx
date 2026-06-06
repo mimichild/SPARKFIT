@@ -7,6 +7,7 @@ export default function TabLayout() {
 
   return (
     <Tabs
+      backBehavior="none"
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: themeColor,
