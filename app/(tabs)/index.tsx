@@ -1,10 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity,
+  View, Text, TouchableOpacity,
   StyleSheet, Modal, Platform,
 } from 'react-native';
-import { GestureDetector } from 'react-native-gesture-handler';
-import { useSwipeToHome } from '@/hooks/useSwipeToHome';
+import { ScrollView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -40,7 +39,6 @@ function buildGoalHint(targetWeight: number | null, currentWeight: number | null
 }
 
 export default function DataScreen() {
-  const swipeGesture = useSwipeToHome();
   const themeColor = useSettingsStore(s => s.themeColor);
   const targetWeight = useSettingsStore(s => s.targetWeight);
 
@@ -71,10 +69,9 @@ export default function DataScreen() {
   const w = measurement?.weight ?? null;
 
   return (
-    <GestureDetector gesture={swipeGesture}>
+    <View style={{ flex: 1 }}>
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
-
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -150,34 +147,6 @@ export default function DataScreen() {
         <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* ── FAB 新增 ── */}
-      <TouchableOpacity
-        style={[styles.fab, { backgroundColor: themeColor }]}
-        activeOpacity={0.85}
-        onPress={() => { setModalMode('add'); setShowAddModal(true); }}
-      >
-        <Text style={styles.fabText}>＋</Text>
-      </TouchableOpacity>
-
-      {/* ── FAB 編輯 ── */}
-      <TouchableOpacity
-        style={[styles.editBtn, { backgroundColor: themeColor }]}
-        activeOpacity={0.85}
-        onPress={() => { setModalMode('edit'); setShowAddModal(true); }}
-      >
-        <Ionicons name="pencil" size={24} color="#FFFFFF" />
-      </TouchableOpacity>
-
-      {/* ── 新增／修改數據 Modal ── */}
-      <AddDataModal
-        visible={showAddModal}
-        themeColor={themeColor}
-        selectedDate={dateKey}
-        mode={modalMode}
-        onClose={() => setShowAddModal(false)}
-        onSaved={loadMeasurement}
-      />
-
       {/* ── iOS 日期選擇器 Modal ── */}
       {Platform.OS === 'ios' && (
         <Modal visible={showPicker} transparent animationType="slide">
@@ -222,7 +191,36 @@ export default function DataScreen() {
         />
       )}
     </SafeAreaView>
-    </GestureDetector>
+
+      {/* ── FAB 新增 ── */}
+      <TouchableOpacity
+        style={[styles.fab, { backgroundColor: themeColor }]}
+        activeOpacity={0.85}
+        onPress={() => { setModalMode('add'); setShowAddModal(true); }}
+      >
+        <Text style={styles.fabText}>＋</Text>
+      </TouchableOpacity>
+
+      {/* ── FAB 編輯 ── */}
+      <TouchableOpacity
+        style={[styles.editBtn, { backgroundColor: themeColor }]}
+        activeOpacity={0.85}
+        onPress={() => { setModalMode('edit'); setShowAddModal(true); }}
+      >
+        <Ionicons name="pencil" size={24} color="#FFFFFF" />
+      </TouchableOpacity>
+
+      {/* ── 新增／修改數據 Modal ── */}
+      <AddDataModal
+        visible={showAddModal}
+        themeColor={themeColor}
+        selectedDate={dateKey}
+        mode={modalMode}
+        onClose={() => setShowAddModal(false)}
+        onSaved={loadMeasurement}
+      />
+
+    </View>
   );
 }
 
