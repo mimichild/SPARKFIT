@@ -9,7 +9,18 @@ export default function RootLayout() {
       <DBProvider>
         <Stack>
           <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="(tabs)"
+            options={{
+              headerShown: false,
+              gestureEnabled: true,
+              gestureDirection: 'horizontal',
+              // Limit the swipe-back recognition area to a thin strip at the
+              // left edge (like iOS's native edge-swipe) so it doesn't compete
+              // with vertical ScrollView gestures across the rest of the screen.
+              gestureResponseDistance: { start: 35 },
+            }}
+          />
           <Stack.Screen name="settings" />
           <Stack.Screen name="+not-found" />
         </Stack>

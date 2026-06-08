@@ -1,8 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { GestureDetector } from 'react-native-gesture-handler';
-import { useSwipeToHome } from '@/hooks/useSwipeToHome';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -334,7 +333,6 @@ function CollapsibleBodyCard({
 const ALL_TYPES: BodyType[] = ['沙漏型', '梨型', '蘋果型', '倒三角型', '直筒型'];
 
 export default function AnalysisScreen() {
-  const swipeGesture = useSwipeToHome();
   const themeColor = useSettingsStore(s => s.themeColor);
   const shoulderWidth = useSettingsStore(s => s.shoulderWidth);
 
@@ -359,7 +357,7 @@ export default function AnalysisScreen() {
   const otherTypes = userType ? ALL_TYPES.filter(t => t !== userType) : ALL_TYPES;
 
   return (
-    <GestureDetector gesture={swipeGesture}>
+    <View style={{ flex: 1 }}>
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -450,7 +448,7 @@ export default function AnalysisScreen() {
         <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
-    </GestureDetector>
+    </View>
   );
 }
 
