@@ -3,6 +3,7 @@ import {
   View, Text, TouchableOpacity,
   StyleSheet, Modal, Platform,
 } from 'react-native';
+import { router, useFocusEffect } from 'expo-router';
 import { ScrollView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -13,7 +14,6 @@ import { useMeasurements, type Measurement } from '@/hooks/useMeasurements';
 import { MeasurementCard } from '@/components/MeasurementCard';
 import { Ionicons } from '@expo/vector-icons';
 
-import { AddDataModal } from '@/components/AddDataModal';
 import { Colors } from '@/constants/colors';
 
 const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六'];
@@ -45,8 +45,6 @@ export default function DataScreen() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [tempDate, setTempDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [measurement, setMeasurement] = useState<Measurement | null>(null);
 
   const { getMeasurement } = useMeasurements();
@@ -60,6 +58,10 @@ export default function DataScreen() {
   useEffect(() => {
     loadMeasurement();
   }, [loadMeasurement]);
+
+  useFocusEffect(useCallback(() => {
+    loadMeasurement();
+  }, [loadMeasurement]));
 
   const openPicker = () => {
     setTempDate(selectedDate);
@@ -196,7 +198,7 @@ export default function DataScreen() {
       <TouchableOpacity
         style={[styles.fab, { backgroundColor: themeColor }]}
         activeOpacity={0.85}
-        onPress={() => { setModalMode('add'); setShowAddModal(true); }}
+        onPress={() => router.push({ pathname: '/add-data', params: { mode: 'add', date: dateKey } })}
       >
         <Text style={styles.fabText}>＋</Text>
       </TouchableOpacity>
@@ -205,20 +207,10 @@ export default function DataScreen() {
       <TouchableOpacity
         style={[styles.editBtn, { backgroundColor: themeColor }]}
         activeOpacity={0.85}
-        onPress={() => { setModalMode('edit'); setShowAddModal(true); }}
+        onPress={() => router.push({ pathname: '/add-data', params: { mode: 'edit', date: dateKey } })}
       >
         <Ionicons name="pencil" size={24} color="#FFFFFF" />
       </TouchableOpacity>
-
-      {/* ── 新增／修改數據 Modal ── */}
-      <AddDataModal
-        visible={showAddModal}
-        themeColor={themeColor}
-        selectedDate={dateKey}
-        mode={modalMode}
-        onClose={() => setShowAddModal(false)}
-        onSaved={loadMeasurement}
-      />
 
     </View>
   );
