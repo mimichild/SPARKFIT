@@ -21,6 +21,7 @@ export default function RootLayout() {
               gestureResponseDistance: { start: 35 },
             }}
           />
+          <Stack.Screen name="add-data" options={{ headerShown: false }} />
           <Stack.Screen name="settings" />
           <Stack.Screen name="+not-found" />
         </Stack>

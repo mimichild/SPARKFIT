@@ -1,21 +1,14 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
-  Modal, View, Text, ScrollView, TouchableOpacity,
+  View, Text, ScrollView, TouchableOpacity,
   TextInput, StyleSheet, KeyboardAvoidingView, Platform, Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLocalSearchParams, router } from 'expo-router';
 
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useMeasurements, type Measurement } from '@/hooks/useMeasurements';
 import { Colors } from '@/constants/colors';
-
-type Props = {
-  visible: boolean;
-  themeColor: string;
-  selectedDate: string;
-  mode?: 'add' | 'edit';
-  onClose: () => void;
-  onSaved: () => void;
-};
 
 type FormData = {
   height: string;
@@ -58,7 +51,10 @@ function toStr(n: number | null | undefined): string {
   return n != null ? String(n) : '';
 }
 
-export function AddDataModal({ visible, themeColor, selectedDate, mode = 'add', onClose, onSaved }: Props) {
+export default function AddDataScreen() {
+  const { mode = 'add', date = '' } = useLocalSearchParams<{ mode: 'add' | 'edit'; date: string }>();
+
+  const themeColor = useSettingsStore(s => s.themeColor);
   const height = useSettingsStore(s => s.height);
   const shoulderWidth = useSettingsStore(s => s.shoulderWidth);
   const targetWeight = useSettingsStore(s => s.targetWeight);
@@ -71,7 +67,7 @@ export function AddDataModal({ visible, themeColor, selectedDate, mode = 'add', 
 
   const loadData = useCallback(async () => {
     if (mode === 'edit') {
-      const m = await getMeasurement(selectedDate);
+      const m = await getMeasurement(date);
       setForm({
         height: toStr(height),
         shoulderWidth: toStr(shoulderWidth),
@@ -103,11 +99,11 @@ export function AddDataModal({ visible, themeColor, selectedDate, mode = 'add', 
         targetWeight: toStr(targetWeight),
       });
     }
-  }, [mode, selectedDate, height, shoulderWidth, targetWeight, getMeasurement]);
+  }, [mode, date, height, shoulderWidth, targetWeight, getMeasurement]);
 
   useEffect(() => {
-    if (visible) loadData();
-  }, [visible, loadData]);
+    loadData();
+  }, [loadData]);
 
   const set = (key: keyof FormData) => (val: string) =>
     setForm(f => ({ ...f, [key]: val }));
@@ -126,7 +122,7 @@ export function AddDataModal({ visible, themeColor, selectedDate, mode = 'add', 
     if (newTargetWeight !== targetWeight) setTargetWeight(newTargetWeight);
 
     const m: Measurement = {
-      date: selectedDate,
+      date,
       weight: toNum(form.weight),
       chest: toNum(form.chest),
       waist: toNum(form.waist),
@@ -148,66 +144,61 @@ export function AddDataModal({ visible, themeColor, selectedDate, mode = 'add', 
     };
 
     await saveMeasurement(m);
-    onSaved();
-    onClose();
+    router.back();
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.sheet}
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.flex}
+      >
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
+            <Text style={styles.headerCancel}>取消</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{mode === 'edit' ? '修改數據' : '新增數據'}</Text>
+          <TouchableOpacity onPress={handleSave} hitSlop={12}>
+            <Text style={[styles.headerSave, { color: themeColor }]}>儲存</Text>
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <View style={styles.handle} />
+          <SectionHeader title="基本資料" subtitle="記錄一次即可" />
+          <Field label="身高" value={form.height} onChange={set('height')} unit="cm" />
+          <Field label="肩寬" value={form.shoulderWidth} onChange={set('shoulderWidth')} unit="cm" />
+          <Field label="目標體重" value={form.targetWeight} onChange={set('targetWeight')} unit="kg" />
 
-          <View style={styles.header}>
-            <TouchableOpacity onPress={onClose} hitSlop={12}>
-              <Text style={styles.headerCancel}>取消</Text>
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>{mode === 'edit' ? '修改數據' : '新增數據'}</Text>
-            <TouchableOpacity onPress={handleSave} hitSlop={12}>
-              <Text style={[styles.headerSave, { color: themeColor }]}>儲存</Text>
-            </TouchableOpacity>
-          </View>
+          <SectionHeader title="身體尺寸" />
+          <Field label="體重" value={form.weight} onChange={set('weight')} unit="kg" required />
+          <Field label="胸圍" value={form.chest} onChange={set('chest')} unit="cm" />
+          <Field label="腰圍" value={form.waist} onChange={set('waist')} unit="cm" />
+          <Field label="低腰圍" value={form.lowWaist} onChange={set('lowWaist')} unit="cm" />
+          <Field label="臀圍" value={form.hip} onChange={set('hip')} unit="cm" />
+          <Field label="大腿" value={form.thigh} onChange={set('thigh')} unit="cm" />
+          <Field label="手臂" value={form.arm} onChange={set('arm')} unit="cm" />
 
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
-            <SectionHeader title="基本資料" subtitle="記錄一次即可" />
-            <Field label="身高" value={form.height} onChange={set('height')} unit="cm" />
-            <Field label="肩寬" value={form.shoulderWidth} onChange={set('shoulderWidth')} unit="cm" />
-            <Field label="目標體重" value={form.targetWeight} onChange={set('targetWeight')} unit="kg" />
+          <SectionHeader title="身體組成" />
+          <Field label="BMI" value={form.bmi} onChange={set('bmi')} unit="" />
+          <Field label="基礎代謝" value={form.bmr} onChange={set('bmr')} unit="kcal" />
+          <Field label="體脂肪率" value={form.bodyFatRate} onChange={set('bodyFatRate')} unit="%" />
+          <Field label="體脂肪重" value={form.bodyFatWeight} onChange={set('bodyFatWeight')} unit="kg" />
+          <Field label="肌肉重" value={form.muscleWeight} onChange={set('muscleWeight')} unit="kg" />
+          <Field label="骨骼重" value={form.boneWeight} onChange={set('boneWeight')} unit="kg" />
+          <Field label="內臟脂肪" value={form.visceralFat} onChange={set('visceralFat')} unit="" />
+          <Field label="體年齡" value={form.bodyAge} onChange={set('bodyAge')} unit="歲" />
+          <Field label="腰臀比" value={form.waistHipRatio} onChange={set('waistHipRatio')} unit="" />
+          <Field label="肥胖度" value={form.obesityDegree} onChange={set('obesityDegree')} unit="%" />
+          <Field label="建議熱量攝取" value={form.recommendedCalories} onChange={set('recommendedCalories')} unit="kcal" />
 
-            <SectionHeader title="身體尺寸" />
-            <Field label="體重" value={form.weight} onChange={set('weight')} unit="kg" required />
-            <Field label="胸圍" value={form.chest} onChange={set('chest')} unit="cm" />
-            <Field label="腰圍" value={form.waist} onChange={set('waist')} unit="cm" />
-            <Field label="低腰圍" value={form.lowWaist} onChange={set('lowWaist')} unit="cm" />
-            <Field label="臀圍" value={form.hip} onChange={set('hip')} unit="cm" />
-            <Field label="大腿" value={form.thigh} onChange={set('thigh')} unit="cm" />
-            <Field label="手臂" value={form.arm} onChange={set('arm')} unit="cm" />
-
-            <SectionHeader title="身體組成" />
-            <Field label="BMI" value={form.bmi} onChange={set('bmi')} unit="" />
-            <Field label="基礎代謝" value={form.bmr} onChange={set('bmr')} unit="kcal" />
-            <Field label="體脂肪率" value={form.bodyFatRate} onChange={set('bodyFatRate')} unit="%" />
-            <Field label="體脂肪重" value={form.bodyFatWeight} onChange={set('bodyFatWeight')} unit="kg" />
-            <Field label="肌肉重" value={form.muscleWeight} onChange={set('muscleWeight')} unit="kg" />
-            <Field label="骨骼重" value={form.boneWeight} onChange={set('boneWeight')} unit="kg" />
-            <Field label="內臟脂肪" value={form.visceralFat} onChange={set('visceralFat')} unit="" />
-            <Field label="體年齡" value={form.bodyAge} onChange={set('bodyAge')} unit="歲" />
-            <Field label="腰臀比" value={form.waistHipRatio} onChange={set('waistHipRatio')} unit="" />
-            <Field label="肥胖度" value={form.obesityDegree} onChange={set('obesityDegree')} unit="%" />
-            <Field label="建議熱量攝取" value={form.recommendedCalories} onChange={set('recommendedCalories')} unit="kcal" />
-
-            <View style={{ height: 40 }} />
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </View>
-    </Modal>
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
@@ -256,25 +247,12 @@ function Field({ label, value, onChange, unit, required }: FieldProps) {
 }
 
 const styles = StyleSheet.create({
-  overlay: {
+  container: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    justifyContent: 'flex-end',
-  },
-  sheet: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: '92%',
   },
-  handle: {
-    width: 40,
-    height: 4,
-    backgroundColor: '#E0E0E0',
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginTop: 12,
-    marginBottom: 4,
+  flex: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
