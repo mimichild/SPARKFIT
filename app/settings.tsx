@@ -3,12 +3,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 
 import { useSettingsStore } from '@/stores/settingsStore';
+import { useBackup } from '@/hooks/useBackup';
 import { THEME_COLORS } from '@/constants';
+import { Colors } from '@/constants/colors';
 
 export default function SettingsScreen() {
   const themeColor = useSettingsStore((s) => s.themeColor);
   const setThemeColor = useSettingsStore((s) => s.setThemeColor);
   const selectedName = THEME_COLORS.find((c) => c.value === themeColor)?.label ?? '';
+
+  const { progress, backupStatus, message, exportBackup, importBackup, isRunning } = useBackup();
+
+  const progressColor = backupStatus === 'error' ? '#FF6B6B' : themeColor;
+  const progressBg = backupStatus === 'error' ? '#FFE0E0' : themeColor + '22';
 
   return (
     <>
@@ -43,9 +50,7 @@ export default function SettingsScreen() {
                     ]}
                   >
                     {isSelected && (
-                      <Text style={styles.checkmark}>
-                        ✓
-                      </Text>
+                      <Text style={styles.checkmark}>✓</Text>
                     )}
                   </View>
                   <Text
@@ -61,7 +66,6 @@ export default function SettingsScreen() {
             })}
           </View>
 
-          {/* 目前選取提示 */}
           {selectedName ? (
             <View style={[styles.selectedBadge, { backgroundColor: themeColor + '22' }]}>
               <View style={[styles.selectedDot, { backgroundColor: themeColor }]} />
@@ -71,6 +75,52 @@ export default function SettingsScreen() {
             </View>
           ) : null}
 
+          {/* 備份與還原 */}
+          <Text style={[styles.sectionTitle, { marginTop: 36 }]}>備份與還原</Text>
+
+          {/* 進度條 */}
+          {backupStatus !== 'idle' && (
+            <View style={styles.progressContainer}>
+              <View style={[styles.progressTrack, { backgroundColor: progressBg }]}>
+                <View
+                  style={[
+                    styles.progressFill,
+                    { backgroundColor: progressColor, width: `${progress}%` },
+                  ]}
+                />
+              </View>
+              <Text style={[styles.progressText, { color: progressColor }]}>
+                {message}
+              </Text>
+            </View>
+          )}
+
+          {/* 匯出備份 */}
+          <TouchableOpacity
+            style={[styles.exportBtn, { backgroundColor: themeColor }, isRunning && styles.btnDisabled]}
+            activeOpacity={0.8}
+            onPress={exportBackup}
+            disabled={isRunning}
+          >
+            <Text style={styles.exportBtnText}>匯出備份</Text>
+          </TouchableOpacity>
+
+          {/* 匯入備份 */}
+          <TouchableOpacity
+            style={[styles.importBtn, { borderColor: themeColor }, isRunning && styles.btnDisabled]}
+            activeOpacity={0.8}
+            onPress={importBackup}
+            disabled={isRunning}
+          >
+            <Text style={[styles.importBtnText, { color: themeColor }]}>匯入備份</Text>
+          </TouchableOpacity>
+
+          {/* 提示文字 */}
+          <Text style={styles.hintText}>
+            合併：新資料加入現有資料｜覆蓋：清除現有資料後還原
+          </Text>
+
+          <View style={{ height: 32 }} />
         </ScrollView>
       </SafeAreaView>
     </>
@@ -147,5 +197,66 @@ const styles = StyleSheet.create({
   selectedText: {
     fontSize: 14,
     fontWeight: '500',
+  },
+
+  // Progress
+  progressContainer: {
+    marginBottom: 16,
+    gap: 8,
+  },
+  progressTrack: {
+    height: 8,
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  progressText: {
+    fontSize: 13,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+
+  // Buttons
+  exportBtn: {
+    height: 54,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  exportBtnText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  importBtn: {
+    height: 54,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+    backgroundColor: '#FFFFFF',
+  },
+  importBtnText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  btnDisabled: {
+    opacity: 0.5,
+  },
+  hintText: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 18,
   },
 });
