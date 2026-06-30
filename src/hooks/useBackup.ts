@@ -23,11 +23,9 @@ export function useBackup() {
   const [message, setMessage] = useState('');
 
   const reset = useCallback(() => {
-    setTimeout(() => {
-      setBackupStatus('idle');
-      setProgress(0);
-      setMessage('');
-    }, 3000);
+    setBackupStatus('idle');
+    setProgress(0);
+    setMessage('');
   }, []);
 
   const doImport = useCallback(async (fileUri: string, mode: 'merge' | 'overwrite') => {
@@ -82,13 +80,17 @@ export function useBackup() {
       }
 
       setProgress(100);
-      setMessage(`匯入完成，共 ${total} 筆資料`);
+      setMessage('匯入完成');
       setBackupStatus('done');
-      reset();
+      Alert.alert('匯入成功', `已成功匯入 ${total} 筆資料`, [
+        { text: '確定', onPress: reset },
+      ]);
     } catch {
       setBackupStatus('error');
-      setMessage('匯入失敗，請確認檔案格式是否正確');
-      reset();
+      setMessage('匯入失敗');
+      Alert.alert('匯入失敗', '請確認檔案格式是否正確', [
+        { text: '確定', onPress: reset },
+      ]);
     }
   }, [db, setHeight, setShoulderWidth, setTargetWeight, setThemeColor, reset]);
 
@@ -166,7 +168,11 @@ export function useBackup() {
           encoding: FileSystem.EncodingType.UTF8,
         });
         setProgress(100);
-        setMessage(`已匯出：${filename}`);
+        setMessage('匯出完成');
+        setBackupStatus('done');
+        Alert.alert('匯出成功', `檔案已儲存至您選擇的資料夾\n\n檔案名稱：${filename}`, [
+          { text: '確定', onPress: reset },
+        ]);
       } else {
         setMessage('準備匯出...');
         const cacheUri = `${FileSystem.cacheDirectory}${filename}`;
@@ -181,14 +187,17 @@ export function useBackup() {
         });
         setProgress(100);
         setMessage('匯出完成');
+        setBackupStatus('done');
+        Alert.alert('匯出成功', `備份檔案：${filename}`, [
+          { text: '確定', onPress: reset },
+        ]);
       }
-
-      setBackupStatus('done');
-      reset();
     } catch {
       setBackupStatus('error');
-      setMessage('匯出失敗，請再試一次');
-      reset();
+      setMessage('匯出失敗');
+      Alert.alert('匯出失敗', '請再試一次', [
+        { text: '確定', onPress: reset },
+      ]);
     }
   }, [db, reset]);
 

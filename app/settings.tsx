@@ -81,6 +81,14 @@ export default function SettingsScreen() {
           {/* 進度條 */}
           {backupStatus !== 'idle' && (
             <View style={styles.progressContainer}>
+              <View style={styles.progressHeader}>
+                <Text style={[styles.progressMessage, { color: progressColor }]}>
+                  {message}
+                </Text>
+                <Text style={[styles.progressPercent, { color: progressColor }]}>
+                  {progress}%
+                </Text>
+              </View>
               <View style={[styles.progressTrack, { backgroundColor: progressBg }]}>
                 <View
                   style={[
@@ -89,9 +97,6 @@ export default function SettingsScreen() {
                   ]}
                 />
               </View>
-              <Text style={[styles.progressText, { color: progressColor }]}>
-                {message}
-              </Text>
             </View>
           )}
 
@@ -204,6 +209,22 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     gap: 8,
   },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  progressMessage: {
+    fontSize: 13,
+    fontWeight: '500',
+    flex: 1,
+  },
+  progressPercent: {
+    fontSize: 15,
+    fontWeight: '700',
+    minWidth: 44,
+    textAlign: 'right',
+  },
   progressTrack: {
     height: 8,
     borderRadius: 4,
@@ -212,11 +233,6 @@ const styles = StyleSheet.create({
   progressFill: {
     height: '100%',
     borderRadius: 4,
-  },
-  progressText: {
-    fontSize: 13,
-    fontWeight: '500',
-    textAlign: 'center',
   },
 
   // Buttons
