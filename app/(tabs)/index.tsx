@@ -81,12 +81,7 @@ export default function DataScreen() {
 
         {/* ── 體重 Hero ── */}
         <View style={[styles.heroCard, { backgroundColor: themeColor }]}>
-          <View style={styles.heroTop}>
-            <Text style={styles.heroLabel}>目前體重</Text>
-            <View style={styles.requiredBadge}>
-              <Text style={[styles.requiredText, { color: themeColor }]}>必填選項</Text>
-            </View>
-          </View>
+          <Text style={styles.heroLabel}>目前體重</Text>
           <View style={styles.heroValueRow}>
             <Text style={styles.heroValue}>{w != null ? w.toFixed(1) : '──'}</Text>
             <Text style={styles.heroUnit}>kg</Text>
@@ -210,27 +205,12 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 4,
   },
-  heroTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-  },
   heroLabel: {
     fontSize: 13,
     color: '#FFFFFF',
     opacity: 0.9,
     fontWeight: '500',
-  },
-  requiredBadge: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 6,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-  },
-  requiredText: {
-    fontSize: 10,
-    fontWeight: '600',
+    marginBottom: 8,
   },
   heroValueRow: {
     flexDirection: 'row',
