@@ -17,6 +17,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
 import { toDateKey, formatDate } from '@/utils/date';
 
+function isEmptyMeasurement(m: Measurement): boolean {
+  return Object.entries(m).every(([key, value]) => key === 'date' || value == null);
+}
+
 function buildGoalHint(targetWeight: number | null, currentWeight: number | null | undefined): string {
   const tw = targetWeight != null ? `${targetWeight}` : '__';
   if (targetWeight != null && currentWeight != null) {
@@ -39,16 +43,13 @@ export default function DataScreen() {
 
   const loadMeasurement = useCallback(async () => {
     const m = await getMeasurement(dateKey);
-    if (m) {
-      setMeasurement(m);
-      return;
-    }
-    if (dateKey === toDateKey(new Date())) {
-      const latest = await getLatestMeasurement();
+    const isToday = dateKey === toDateKey(new Date());
+    if (isToday && (!m || isEmptyMeasurement(m))) {
+      const latest = await getLatestMeasurement(dateKey);
       setMeasurement(latest);
       return;
     }
-    setMeasurement(null);
+    setMeasurement(m);
   }, [dateKey, getMeasurement, getLatestMeasurement]);
 
   useEffect(() => {
