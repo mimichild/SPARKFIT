@@ -15,31 +15,41 @@ type FormData = {
   shoulderWidth: string;
   targetWeight: string;
   weight: string;
+  bmi: string;
+  bodyFatRate: string;
+  muscleWeight: string;
+  boneWeight: string;
+  visceralFat: string;
+  bmr: string;
+  bodyAge: string;
   chest: string;
   waist: string;
   lowWaist: string;
   hip: string;
   thigh: string;
   arm: string;
-  bmi: string;
-  bmr: string;
-  bodyFatRate: string;
-  bodyFatWeight: string;
-  muscleWeight: string;
-  boneWeight: string;
-  visceralFat: string;
-  bodyAge: string;
-  waistHipRatio: string;
-  obesityDegree: string;
-  recommendedCalories: string;
 };
 
 const EMPTY_FORM: FormData = {
   height: '', shoulderWidth: '', targetWeight: '', weight: '',
+  bmi: '', bodyFatRate: '', muscleWeight: '', boneWeight: '',
+  visceralFat: '', bmr: '', bodyAge: '',
   chest: '', waist: '', lowWaist: '', hip: '', thigh: '', arm: '',
-  bmi: '', bmr: '', bodyFatRate: '', bodyFatWeight: '',
-  muscleWeight: '', boneWeight: '', visceralFat: '', bodyAge: '',
-  waistHipRatio: '', obesityDegree: '', recommendedCalories: '',
+};
+
+// 已從畫面上移除，但仍需在儲存時原封不動帶回去，避免清空使用者手機上的舊資料
+type HiddenFields = {
+  body_fat_weight: number | null;
+  waist_hip_ratio: number | null;
+  obesity_degree: number | null;
+  recommended_calories: number | null;
+};
+
+const EMPTY_HIDDEN_FIELDS: HiddenFields = {
+  body_fat_weight: null,
+  waist_hip_ratio: null,
+  obesity_degree: null,
+  recommended_calories: null,
 };
 
 function toNum(s: string): number | null {
@@ -64,32 +74,37 @@ export default function AddDataScreen() {
 
   const { getMeasurement, saveMeasurement } = useMeasurements();
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
+  const [hiddenFields, setHiddenFields] = useState<HiddenFields>(EMPTY_HIDDEN_FIELDS);
 
   const loadData = useCallback(async () => {
+    const m = await getMeasurement(date);
+
+    setHiddenFields({
+      body_fat_weight: m?.body_fat_weight ?? null,
+      waist_hip_ratio: m?.waist_hip_ratio ?? null,
+      obesity_degree: m?.obesity_degree ?? null,
+      recommended_calories: m?.recommended_calories ?? null,
+    });
+
     if (mode === 'edit') {
-      const m = await getMeasurement(date);
       setForm({
         height: toStr(height),
         shoulderWidth: toStr(shoulderWidth),
         targetWeight: toStr(targetWeight),
         weight: toStr(m?.weight),
+        bmi: toStr(m?.bmi),
+        bodyFatRate: toStr(m?.body_fat_rate),
+        muscleWeight: toStr(m?.muscle_weight),
+        boneWeight: toStr(m?.bone_weight),
+        visceralFat: toStr(m?.visceral_fat),
+        bmr: toStr(m?.bmr),
+        bodyAge: toStr(m?.body_age),
         chest: toStr(m?.chest),
         waist: toStr(m?.waist),
         lowWaist: toStr(m?.low_waist),
         hip: toStr(m?.hip),
         thigh: toStr(m?.thigh),
         arm: toStr(m?.arm),
-        bmi: toStr(m?.bmi),
-        bmr: toStr(m?.bmr),
-        bodyFatRate: toStr(m?.body_fat_rate),
-        bodyFatWeight: toStr(m?.body_fat_weight),
-        muscleWeight: toStr(m?.muscle_weight),
-        boneWeight: toStr(m?.bone_weight),
-        visceralFat: toStr(m?.visceral_fat),
-        bodyAge: toStr(m?.body_age),
-        waistHipRatio: toStr(m?.waist_hip_ratio),
-        obesityDegree: toStr(m?.obesity_degree),
-        recommendedCalories: toStr(m?.recommended_calories),
       });
     } else {
       setForm({
@@ -128,14 +143,11 @@ export default function AddDataScreen() {
       bmi: toNum(form.bmi),
       bmr: toNum(form.bmr),
       body_fat_rate: toNum(form.bodyFatRate),
-      body_fat_weight: toNum(form.bodyFatWeight),
       muscle_weight: toNum(form.muscleWeight),
       bone_weight: toNum(form.boneWeight),
       visceral_fat: toNum(form.visceralFat),
       body_age: toNum(form.bodyAge),
-      waist_hip_ratio: toNum(form.waistHipRatio),
-      obesity_degree: toNum(form.obesityDegree),
-      recommended_calories: toNum(form.recommendedCalories),
+      ...hiddenFields,
     };
 
     await saveMeasurement(m);
@@ -168,27 +180,23 @@ export default function AddDataScreen() {
           <Field label="肩寬" value={form.shoulderWidth} onChange={set('shoulderWidth')} unit="cm" />
           <Field label="目標體重" value={form.targetWeight} onChange={set('targetWeight')} unit="kg" />
 
-          <SectionHeader title="身體尺寸" />
+          <SectionHeader title="身體組成" />
           <Field label="體重" value={form.weight} onChange={set('weight')} unit="kg" />
+          <Field label="BMI" value={form.bmi} onChange={set('bmi')} unit="" />
+          <Field label="體脂肪率" value={form.bodyFatRate} onChange={set('bodyFatRate')} unit="%" />
+          <Field label="肌肉重" value={form.muscleWeight} onChange={set('muscleWeight')} unit="kg" />
+          <Field label="骨量" value={form.boneWeight} onChange={set('boneWeight')} unit="kg" />
+          <Field label="內臟脂肪" value={form.visceralFat} onChange={set('visceralFat')} unit="" />
+          <Field label="基礎代謝" value={form.bmr} onChange={set('bmr')} unit="kcal" />
+          <Field label="體年齡" value={form.bodyAge} onChange={set('bodyAge')} unit="歲" />
+
+          <SectionHeader title="身體尺寸" />
           <Field label="胸圍" value={form.chest} onChange={set('chest')} unit="cm" />
           <Field label="腰圍" value={form.waist} onChange={set('waist')} unit="cm" />
           <Field label="低腰圍" value={form.lowWaist} onChange={set('lowWaist')} unit="cm" />
           <Field label="臀圍" value={form.hip} onChange={set('hip')} unit="cm" />
-          <Field label="大腿" value={form.thigh} onChange={set('thigh')} unit="cm" />
-          <Field label="手臂" value={form.arm} onChange={set('arm')} unit="cm" />
-
-          <SectionHeader title="身體組成" />
-          <Field label="BMI" value={form.bmi} onChange={set('bmi')} unit="" />
-          <Field label="基礎代謝" value={form.bmr} onChange={set('bmr')} unit="kcal" />
-          <Field label="體脂肪率" value={form.bodyFatRate} onChange={set('bodyFatRate')} unit="%" />
-          <Field label="體脂肪重" value={form.bodyFatWeight} onChange={set('bodyFatWeight')} unit="kg" />
-          <Field label="肌肉重" value={form.muscleWeight} onChange={set('muscleWeight')} unit="kg" />
-          <Field label="骨骼重" value={form.boneWeight} onChange={set('boneWeight')} unit="kg" />
-          <Field label="內臟脂肪" value={form.visceralFat} onChange={set('visceralFat')} unit="" />
-          <Field label="體年齡" value={form.bodyAge} onChange={set('bodyAge')} unit="歲" />
-          <Field label="腰臀比" value={form.waistHipRatio} onChange={set('waistHipRatio')} unit="" />
-          <Field label="肥胖度" value={form.obesityDegree} onChange={set('obesityDegree')} unit="%" />
-          <Field label="建議熱量攝取" value={form.recommendedCalories} onChange={set('recommendedCalories')} unit="kcal" />
+          <Field label="大腿圍" value={form.thigh} onChange={set('thigh')} unit="cm" />
+          <Field label="手臂圍" value={form.arm} onChange={set('arm')} unit="cm" />
 
           <View style={{ height: 40 }} />
         </ScrollView>
