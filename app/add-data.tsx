@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  TextInput, StyleSheet, KeyboardAvoidingView, Platform, Alert,
+  TextInput, StyleSheet, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -109,11 +109,6 @@ export default function AddDataScreen() {
     setForm(f => ({ ...f, [key]: val }));
 
   const handleSave = async () => {
-    if (!form.weight.trim()) {
-      Alert.alert('提醒', '體重為必填欄位，請輸入今日體重');
-      return;
-    }
-
     const newHeight = toNum(form.height);
     const newShoulderWidth = toNum(form.shoulderWidth);
     const newTargetWeight = toNum(form.targetWeight);
@@ -174,7 +169,7 @@ export default function AddDataScreen() {
           <Field label="目標體重" value={form.targetWeight} onChange={set('targetWeight')} unit="kg" />
 
           <SectionHeader title="身體尺寸" />
-          <Field label="體重" value={form.weight} onChange={set('weight')} unit="kg" required />
+          <Field label="體重" value={form.weight} onChange={set('weight')} unit="kg" />
           <Field label="胸圍" value={form.chest} onChange={set('chest')} unit="cm" />
           <Field label="腰圍" value={form.waist} onChange={set('waist')} unit="cm" />
           <Field label="低腰圍" value={form.lowWaist} onChange={set('lowWaist')} unit="cm" />
