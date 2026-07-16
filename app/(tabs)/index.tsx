@@ -1,17 +1,17 @@
 import { useState, useCallback, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity,
-  StyleSheet, Modal, Platform,
+  StyleSheet,
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { ScrollView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import DateTimePicker from '@react-native-community/datetimepicker';
 
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useMeasurements, type Measurement } from '@/hooks/useMeasurements';
 import { MeasurementCard } from '@/components/MeasurementCard';
+import { DataCalendarModal } from '@/components/DataCalendarModal';
 import { Ionicons } from '@expo/vector-icons';
 
 import { Colors } from '@/constants/colors';
@@ -31,17 +31,25 @@ export default function DataScreen() {
   const targetWeight = useSettingsStore(s => s.targetWeight);
 
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [tempDate, setTempDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
   const [measurement, setMeasurement] = useState<Measurement | null>(null);
 
-  const { getMeasurement } = useMeasurements();
+  const { getMeasurement, getLatestMeasurement } = useMeasurements();
   const dateKey = toDateKey(selectedDate);
 
   const loadMeasurement = useCallback(async () => {
     const m = await getMeasurement(dateKey);
-    setMeasurement(m);
-  }, [dateKey, getMeasurement]);
+    if (m) {
+      setMeasurement(m);
+      return;
+    }
+    if (dateKey === toDateKey(new Date())) {
+      const latest = await getLatestMeasurement();
+      setMeasurement(latest);
+      return;
+    }
+    setMeasurement(null);
+  }, [dateKey, getMeasurement, getLatestMeasurement]);
 
   useEffect(() => {
     loadMeasurement();
@@ -52,7 +60,6 @@ export default function DataScreen() {
   }, [loadMeasurement]));
 
   const openPicker = () => {
-    setTempDate(selectedDate);
     setShowPicker(true);
   };
 
@@ -137,49 +144,14 @@ export default function DataScreen() {
         <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* ── iOS 日期選擇器 Modal ── */}
-      {Platform.OS === 'ios' && (
-        <Modal visible={showPicker} transparent animationType="slide">
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={() => setShowPicker(false)}
-          >
-            <View style={styles.pickerSheet}>
-              <View style={styles.pickerHeader}>
-                <TouchableOpacity onPress={() => setShowPicker(false)}>
-                  <Text style={styles.pickerCancel}>取消</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => { setSelectedDate(tempDate); setShowPicker(false); }}
-                >
-                  <Text style={[styles.pickerConfirm, { color: themeColor }]}>確認</Text>
-                </TouchableOpacity>
-              </View>
-              <DateTimePicker
-                value={tempDate}
-                mode="date"
-                display="spinner"
-                onChange={(_, date) => date && setTempDate(date)}
-                locale="zh-TW"
-              />
-            </View>
-          </TouchableOpacity>
-        </Modal>
-      )}
-
-      {/* ── Android 日期選擇器 ── */}
-      {Platform.OS === 'android' && showPicker && (
-        <DateTimePicker
-          value={selectedDate}
-          mode="date"
-          display="default"
-          onChange={(_, date) => {
-            setShowPicker(false);
-            if (date) setSelectedDate(date);
-          }}
-        />
-      )}
+      {/* ── 日期選擇月曆 ── */}
+      <DataCalendarModal
+        visible={showPicker}
+        selectedDate={selectedDate}
+        themeColor={themeColor}
+        onConfirm={(date) => { setSelectedDate(date); setShowPicker(false); }}
+        onCancel={() => setShowPicker(false)}
+      />
     </SafeAreaView>
 
       {/* ── FAB 新增 ── */}
@@ -341,34 +313,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 6,
-  },
-
-  // Date picker modal (iOS)
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'flex-end',
-  },
-  pickerSheet: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingBottom: 32,
-  },
-  pickerHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  pickerCancel: {
-    fontSize: 15,
-    color: '#999999',
-  },
-  pickerConfirm: {
-    fontSize: 15,
-    fontWeight: '600',
   },
 });
