@@ -23,6 +23,15 @@ export type Measurement = {
   recommended_calories: number | null;
 };
 
+const HAS_DATA_CONDITION = `(
+  weight IS NOT NULL OR chest IS NOT NULL OR waist IS NOT NULL OR low_waist IS NOT NULL OR
+  hip IS NOT NULL OR thigh IS NOT NULL OR arm IS NOT NULL OR bmi IS NOT NULL OR
+  bmr IS NOT NULL OR body_fat_rate IS NOT NULL OR body_fat_weight IS NOT NULL OR
+  muscle_weight IS NOT NULL OR bone_weight IS NOT NULL OR visceral_fat IS NOT NULL OR
+  body_age IS NOT NULL OR waist_hip_ratio IS NOT NULL OR obesity_degree IS NOT NULL OR
+  recommended_calories IS NOT NULL
+)`;
+
 export function useMeasurements() {
   const db = useDBContext();
 
@@ -67,10 +76,15 @@ export function useMeasurements() {
     [db],
   );
 
-  const getLatestMeasurement = useCallback(async (): Promise<Measurement | null> => {
-    const result = await db.getFirstAsync<Measurement>(
-      'SELECT * FROM measurements ORDER BY date DESC LIMIT 1',
-    );
+  const getLatestMeasurement = useCallback(async (beforeDate?: string): Promise<Measurement | null> => {
+    const result = beforeDate
+      ? await db.getFirstAsync<Measurement>(
+          `SELECT * FROM measurements WHERE date < ? AND ${HAS_DATA_CONDITION} ORDER BY date DESC LIMIT 1`,
+          [beforeDate],
+        )
+      : await db.getFirstAsync<Measurement>(
+          `SELECT * FROM measurements WHERE ${HAS_DATA_CONDITION} ORDER BY date DESC LIMIT 1`,
+        );
     return result ?? null;
   }, [db]);
 
