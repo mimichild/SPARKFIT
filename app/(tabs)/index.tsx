@@ -15,19 +15,7 @@ import { MeasurementCard } from '@/components/MeasurementCard';
 import { Ionicons } from '@expo/vector-icons';
 
 import { Colors } from '@/constants/colors';
-
-const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六'];
-
-function formatDate(d: Date): string {
-  return `${d.getFullYear()} 年 ${d.getMonth() + 1} 月 ${d.getDate()} 日（${WEEKDAYS[d.getDay()]}）`;
-}
-
-function toDateKey(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
+import { toDateKey, formatDate } from '@/utils/date';
 
 function buildGoalHint(targetWeight: number | null, currentWeight: number | null | undefined): string {
   const tw = targetWeight != null ? `${targetWeight}` : '__';
