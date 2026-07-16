@@ -95,6 +95,25 @@ export default function DataScreen() {
         {/* ── 目標體重提示 ── */}
         <Text style={styles.goalHint}>{buildGoalHint(targetWeight, w)}</Text>
 
+        {/* ── 身體組成 ── */}
+        <Text style={styles.sectionTitle}>身體組成</Text>
+        <View style={styles.grid}>
+          <MeasurementCard label="BMI" value={measurement?.bmi ?? null} unit="" valueColor={themeColor} />
+          <MeasurementCard label="體脂肪率" value={measurement?.body_fat_rate ?? null} unit="%" valueColor={themeColor} />
+        </View>
+        <View style={styles.grid}>
+          <MeasurementCard label="肌肉重" value={measurement?.muscle_weight ?? null} unit="kg" valueColor={themeColor} />
+          <MeasurementCard label="骨量" value={measurement?.bone_weight ?? null} unit="kg" valueColor={themeColor} />
+        </View>
+        <View style={styles.grid}>
+          <MeasurementCard label="內臟脂肪" value={measurement?.visceral_fat ?? null} unit="" valueColor={themeColor} />
+          <MeasurementCard label="基礎代謝" value={measurement?.bmr ?? null} unit="kcal" valueColor={themeColor} />
+        </View>
+        <View style={styles.grid}>
+          <MeasurementCard label="體年齡" value={measurement?.body_age ?? null} unit="歲" valueColor={themeColor} />
+          <View style={{ flex: 1, margin: 4 }} />
+        </View>
+
         {/* ── 身體尺寸 ── */}
         <Text style={styles.sectionTitle}>身體尺寸</Text>
         <View style={styles.grid}>
@@ -106,35 +125,8 @@ export default function DataScreen() {
           <MeasurementCard label="臀圍" value={measurement?.hip ?? null} unit="cm" valueColor={themeColor} />
         </View>
         <View style={styles.grid}>
-          <MeasurementCard label="大腿" value={measurement?.thigh ?? null} unit="cm" valueColor={themeColor} />
-          <MeasurementCard label="手臂" value={measurement?.arm ?? null} unit="cm" valueColor={themeColor} />
-        </View>
-
-        {/* ── 身體組成 ── */}
-        <Text style={styles.sectionTitle}>身體組成</Text>
-        <View style={styles.grid}>
-          <MeasurementCard label="BMI" value={measurement?.bmi ?? null} unit="" valueColor={themeColor} />
-          <MeasurementCard label="基礎代謝" value={measurement?.bmr ?? null} unit="kcal" valueColor={themeColor} />
-        </View>
-        <View style={styles.grid}>
-          <MeasurementCard label="體脂肪率" value={measurement?.body_fat_rate ?? null} unit="%" valueColor={themeColor} />
-          <MeasurementCard label="體脂肪重" value={measurement?.body_fat_weight ?? null} unit="kg" valueColor={themeColor} />
-        </View>
-        <View style={styles.grid}>
-          <MeasurementCard label="肌肉重" value={measurement?.muscle_weight ?? null} unit="kg" valueColor={themeColor} />
-          <MeasurementCard label="骨骼重" value={measurement?.bone_weight ?? null} unit="kg" valueColor={themeColor} />
-        </View>
-        <View style={styles.grid}>
-          <MeasurementCard label="內臟脂肪" value={measurement?.visceral_fat ?? null} unit="" valueColor={themeColor} />
-          <MeasurementCard label="體年齡" value={measurement?.body_age ?? null} unit="歲" valueColor={themeColor} />
-        </View>
-        <View style={styles.grid}>
-          <MeasurementCard label="腰臀比" value={measurement?.waist_hip_ratio ?? null} unit="" valueColor={themeColor} />
-          <MeasurementCard label="肥胖度" value={measurement?.obesity_degree ?? null} unit="%" valueColor={themeColor} />
-        </View>
-        <View style={styles.grid}>
-          <MeasurementCard label="建議熱量攝取" value={measurement?.recommended_calories ?? null} unit="kcal" valueColor={themeColor} />
-          <View style={{ flex: 1, margin: 4 }} />
+          <MeasurementCard label="大腿圍" value={measurement?.thigh ?? null} unit="cm" valueColor={themeColor} />
+          <MeasurementCard label="手臂圍" value={measurement?.arm ?? null} unit="cm" valueColor={themeColor} />
         </View>
 
         <View style={{ height: 100 }} />

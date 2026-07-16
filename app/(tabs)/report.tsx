@@ -23,24 +23,20 @@ type DateTarget = 'single' | 'start' | 'end';
 type MetricKey = keyof Omit<Measurement, 'date'>;
 
 const METRICS: { key: MetricKey; label: string; unit: string }[] = [
-  { key: 'weight',               label: '體重',      unit: 'kg'   },
-  { key: 'chest',                label: '胸圍',      unit: 'cm'   },
-  { key: 'waist',                label: '腰圍',      unit: 'cm'   },
-  { key: 'low_waist',            label: '低腰圍',    unit: 'cm'   },
-  { key: 'hip',                  label: '臀圍',      unit: 'cm'   },
-  { key: 'thigh',                label: '大腿',      unit: 'cm'   },
-  { key: 'arm',                  label: '手臂',      unit: 'cm'   },
-  { key: 'bmi',                  label: 'BMI',       unit: ''     },
-  { key: 'bmr',                  label: '基礎代謝',  unit: 'kcal' },
-  { key: 'body_fat_rate',        label: '體脂肪率',  unit: '%'    },
-  { key: 'body_fat_weight',      label: '體脂肪重',  unit: 'kg'   },
-  { key: 'muscle_weight',        label: '肌肉重',    unit: 'kg'   },
-  { key: 'bone_weight',          label: '骨骼重',    unit: 'kg'   },
-  { key: 'visceral_fat',         label: '內臟脂肪',  unit: ''     },
-  { key: 'body_age',             label: '體年齡',    unit: '歲'   },
-  { key: 'waist_hip_ratio',      label: '腰臀比',    unit: ''     },
-  { key: 'obesity_degree',       label: '肥胖度',    unit: '%'    },
-  { key: 'recommended_calories', label: '建議熱量',  unit: 'kcal' },
+  { key: 'weight',        label: '體重',      unit: 'kg'   },
+  { key: 'bmi',            label: 'BMI',       unit: ''     },
+  { key: 'body_fat_rate', label: '體脂肪率',  unit: '%'    },
+  { key: 'muscle_weight', label: '肌肉重',    unit: 'kg'   },
+  { key: 'bone_weight',   label: '骨量',      unit: 'kg'   },
+  { key: 'visceral_fat',  label: '內臟脂肪',  unit: ''     },
+  { key: 'bmr',           label: '基礎代謝',  unit: 'kcal' },
+  { key: 'body_age',      label: '體年齡',    unit: '歲'   },
+  { key: 'chest',         label: '胸圍',      unit: 'cm'   },
+  { key: 'waist',         label: '腰圍',      unit: 'cm'   },
+  { key: 'low_waist',     label: '低腰圍',    unit: 'cm'   },
+  { key: 'hip',           label: '臀圍',      unit: 'cm'   },
+  { key: 'thigh',         label: '大腿圍',    unit: 'cm'   },
+  { key: 'arm',           label: '手臂圍',    unit: 'cm'   },
 ];
 
 const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六'];
