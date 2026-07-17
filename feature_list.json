@@ -1,0 +1,93 @@
+{
+  "project": "SPARKFIT",
+  "last_updated": "2026-07-17",
+  "rules": {
+    "single_active_feature": true,
+    "passing_requires_evidence": true,
+    "do_not_skip_verification": true,
+    "evidence_format": "YYYY-MM-DD | 實際執行的指令 | 關鍵輸出摘要",
+    "details": "狀態機、證據判準與範例見 docs/harness/PLAYBOOK.md"
+  },
+  "status_legend": {
+    "not_started": "尚未開始。",
+    "in_progress": "目前唯一正在進行的功能。",
+    "blocked": "因已記錄的問題無法繼續；notes 必須寫明現象、已嘗試方法、建議解法。",
+    "passing": "verification 全部實際執行過，且 evidence 已依格式記錄。"
+  },
+  "features": [
+    {
+      "id": "ios-001",
+      "priority": 1,
+      "area": "ios",
+      "title": "iOS 模擬器啟動 App 並截圖存證",
+      "user_visible_behavior": "在 iOS 模擬器上可以看到 SPARKFIT 啟動並顯示首頁。",
+      "status": "not_started",
+      "verification": [
+        "執行 npx expo run:ios（或 pnpm ios）。",
+        "確認建置成功且模擬器開啟 App、首頁正常渲染無紅屏。",
+        "擷取模擬器截圖存入 docs/ 作為證據。"
+      ],
+      "evidence": [],
+      "notes": "本專案尚未 build 過 iOS。"
+    },
+    {
+      "id": "ios-002",
+      "priority": 2,
+      "area": "ios",
+      "title": "模擬器驗證核心流程：資料庫讀寫、圖表與日曆渲染",
+      "user_visible_behavior": "使用者在 iOS 模擬器上能新增紀錄、看到圖表（chart-kit/svg）與日曆（calendars）正常顯示，重啟後資料仍在。",
+      "status": "not_started",
+      "verification": [
+        "在模擬器新增一筆核心紀錄。",
+        "確認圖表頁與日曆頁正常渲染無紅屏。",
+        "完全關閉 App 再重開，確認資料仍存在。"
+      ],
+      "evidence": [],
+      "notes": ""
+    },
+    {
+      "id": "test-001",
+      "priority": 3,
+      "area": "testing",
+      "title": "建立基礎單元測試，讓基準驗證回到 pnpm test",
+      "user_visible_behavior": "開發者執行 pnpm test 能跑至少 10 個有意義的測試（純函數/服務層優先）。",
+      "status": "not_started",
+      "verification": [
+        "為純函數與服務層寫單元測試（至少 10 個 test）。",
+        "pnpm test 全綠。",
+        "把 init.sh 的 VERIFY_CMD 從 pnpm typecheck 改回 pnpm test（或兩者都跑）。"
+      ],
+      "evidence": [],
+      "notes": "專案目前完全沒有測試檔，init.sh 暫用 typecheck 當基準驗證。"
+    },
+    {
+      "id": "ios-004",
+      "priority": 4,
+      "area": "ios",
+      "title": "EAS iOS 雲端建置成功",
+      "user_visible_behavior": "EAS Build 產出可安裝的 iOS build。",
+      "status": "not_started",
+      "verification": [
+        "確認 Apple Developer 帳號可用；補齊 eas.json 的 iOS profile（目前只有 Android）。",
+        "執行 eas build --platform ios。",
+        "確認 expo.dev 建置狀態 finished，記錄 build URL。"
+      ],
+      "evidence": [],
+      "notes": "前置：Apple Developer Program（申請中則標 blocked）。"
+    },
+    {
+      "id": "ios-005",
+      "priority": 5,
+      "area": "ios",
+      "title": "TestFlight 內部測試",
+      "user_visible_behavior": "使用者的 iPhone 能從 TestFlight 安裝並正常使用核心功能。",
+      "status": "not_started",
+      "verification": [
+        "eas submit --platform ios 並在 App Store Connect 加入內部測試群組。",
+        "實機安裝啟動，重跑 ios-002 核心流程。"
+      ],
+      "evidence": [],
+      "notes": "依賴 ios-004。"
+    }
+  ]
+}
