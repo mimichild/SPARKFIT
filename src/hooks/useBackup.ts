@@ -175,12 +175,16 @@ export function useBackup() {
         ]);
       } else {
         setMessage('準備匯出...');
-        const cacheUri = `${FileSystem.cacheDirectory}${filename}`;
-        await FileSystem.writeAsStringAsync(cacheUri, json, {
+        // documentDirectory（而非 cacheDirectory）搭配 app.json 的
+        // UIFileSharingEnabled + LSSupportsOpeningDocumentsInPlace，
+        // 讓備份檔案直接出現在「檔案」App 的「我的 iPhone / SPARKFIT」，
+        // 不必依賴分享面板「儲存到檔案」是否真的操作成功。
+        const docUri = `${FileSystem.documentDirectory}${filename}`;
+        await FileSystem.writeAsStringAsync(docUri, json, {
           encoding: FileSystem.EncodingType.UTF8,
         });
         setProgress(90);
-        await Sharing.shareAsync(cacheUri, {
+        await Sharing.shareAsync(docUri, {
           mimeType: 'application/json',
           dialogTitle: '儲存備份檔案',
           UTI: 'public.json',
@@ -188,7 +192,7 @@ export function useBackup() {
         setProgress(100);
         setMessage('匯出完成');
         setBackupStatus('done');
-        Alert.alert('匯出成功', `備份檔案：${filename}`, [
+        Alert.alert('匯出成功', `備份已存到「檔案」App 的「我的 iPhone / SPARKFIT」資料夾\n\n檔案名稱：${filename}`, [
           { text: '確定', onPress: reset },
         ]);
       }
