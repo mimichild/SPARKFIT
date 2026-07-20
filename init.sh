@@ -8,7 +8,7 @@ cd "$ROOT_DIR"
 
 # ── 依專案修改這三個變數 ──────────────────────────────────────
 INSTALL_CMD=(pnpm install)
-VERIFY_CMD=(pnpm typecheck) # 專案目前沒有任何測試檔，用 typecheck 當基準驗證；補測試後改回 pnpm test
+VERIFY_CMD=(pnpm test)      # jest 單次執行；另有 pnpm typecheck
 START_CMD=(pnpm start)     # expo start
 # ─────────────────────────────────────────────────────────
 

@@ -58,14 +58,19 @@
       "area": "testing",
       "title": "建立基礎單元測試，讓基準驗證回到 pnpm test",
       "user_visible_behavior": "開發者執行 pnpm test 能跑至少 10 個有意義的測試（純函數/服務層優先）。",
-      "status": "not_started",
+      "status": "passing",
       "verification": [
         "為純函數與服務層寫單元測試（至少 10 個 test）。",
         "pnpm test 全綠。",
         "把 init.sh 的 VERIFY_CMD 從 pnpm typecheck 改回 pnpm test（或兩者都跑）。"
       ],
-      "evidence": [],
-      "notes": "專案目前完全沒有測試檔，init.sh 暫用 typecheck 當基準驗證。"
+      "evidence": [
+        "2026-07-20 | 新增 src/__tests__/utils/date.test.ts（6 tests）、src/__tests__/stores/settingsStore.test.ts（7 tests）、src/__tests__/hooks/useMeasurements.test.ts（8 tests）| 涵蓋純函數（toDateKey/formatDate 的日期格式化與邊界）、zustand store（setter 更新狀態、彼此不互相污染）、SQLite 服務層 hook（正確的 SQL 語句與參數、null 處理）",
+        "2026-07-20 | pnpm test | 3 test suites, 21 tests passed（遠超過 10 個門檻）",
+        "2026-07-20 | 修改 init.sh 的 VERIFY_CMD 從 pnpm typecheck 改成 pnpm test | ./init.sh 執行成功，21 tests passed",
+        "2026-07-20 | pnpm typecheck | 無錯誤，另外保留驗證"
+      ],
+      "notes": "settingsStore 測試只驗證 store 本身的 setter 邏輯，不測試 zustand persist middleware 與 AsyncStorage 的整合細節（那是第三方套件自己的職責）。AsyncStorage 用官方提供的 jest mock（@react-native-async-storage/async-storage/jest/async-storage-mock）。"
     },
     {
       "id": "ios-004",
@@ -73,14 +78,14 @@
       "area": "ios",
       "title": "EAS iOS 雲端建置成功",
       "user_visible_behavior": "EAS Build 產出可安裝的 iOS build。",
-      "status": "not_started",
+      "status": "blocked",
       "verification": [
         "確認 Apple Developer 帳號可用；補齊 eas.json 的 iOS profile（目前只有 Android）。",
         "執行 eas build --platform ios。",
         "確認 expo.dev 建置狀態 finished，記錄 build URL。"
       ],
       "evidence": [],
-      "notes": "前置：Apple Developer Program（申請中則標 blocked）。"
+      "notes": "2026-07-20 blocked：ios-001/ios-002/test-001 皆已完成，唯一前置條件剩 Apple Developer Program（$99/年）尚未申請，需使用者決定是否付費申請。已嘗試：無需嘗試，純屬外部帳號申請前置。建議解法：使用者申請 Apple Developer Program 後再回來繼續；帳號未辦好前不要空等此項。"
     },
     {
       "id": "ios-005",
