@@ -9,11 +9,22 @@
 - 儲存庫根目錄：/Users/mimi/Documents/SPARKFIT
 - 標準啟動路徑：`RUN_START_COMMAND=1 ./init.sh`（實際指令見 init.sh 的 START_CMD）
 - 標準驗證路徑：./init.sh（pnpm install + pnpm typecheck；專案目前沒有任何測試檔）
-- 目前最高優先級未完成功能：ios-002 模擬器驗證核心流程（資料庫讀寫、圖表與日曆渲染）
+- 目前最高優先級未完成功能：test-001（建立基礎單元測試，讓基準驗證回到 pnpm test）
 - 目前 blocker：無
-- 背景：專案完全沒有測試（test-001 要補）；eas.json 已存在但缺 iOS profile；ios-001 已 passing，第一次 build 就成功，沒有 SPARKPLATE/SPARKSHAPE 那種原生層修復需求
+- 背景：ios-001、ios-002 已 passing；專案完全沒有測試，init.sh 暫用 typecheck 當基準驗證；eas.json 已存在但缺 iOS profile
 
 ## 工作階段日誌
+
+### 工作階段 003
+
+- 日期：2026-07-20
+- 本輪目標：完成 ios-002（模擬器驗證核心流程：資料庫讀寫、圖表與日曆渲染）
+- 已完成：新增一筆身體數據紀錄，「數據」頁與「報告」頁（圖表）皆正常渲染無紅屏；sqlite3 直接查容器內 sparkfit.db 確認寫入成功；完全關閉 App 重開後資料仍在
+- 執行過的驗證：模擬器手動操作＋sqlite3 直接查詢資料庫內容＋simctl terminate/launch 持久化測試
+- 已擷取證據：見 feature_list.json ios-002 evidence；截圖 docs/ios-002-chart-calendar.png、docs/ios-002-restart-persist.png
+- 提交記錄：（見本輪 commit）
+- 已知風險或未解決問題：無新增
+- 下一步最佳動作：test-001（建立基礎單元測試）——這個排在 ios-004 之前，照優先順序應該先做
 
 ### 工作階段 002
 

@@ -39,13 +39,17 @@
       "area": "ios",
       "title": "模擬器驗證核心流程：資料庫讀寫、圖表與日曆渲染",
       "user_visible_behavior": "使用者在 iOS 模擬器上能新增紀錄、看到圖表（chart-kit/svg）與日曆（calendars）正常顯示，重啟後資料仍在。",
-      "status": "not_started",
+      "status": "passing",
       "verification": [
         "在模擬器新增一筆核心紀錄。",
         "確認圖表頁與日曆頁正常渲染無紅屏。",
         "完全關閉 App 再重開，確認資料仍存在。"
       ],
-      "evidence": [],
+      "evidence": [
+        "2026-07-20 | 使用者手動操作：新增一筆身體數據紀錄 | 「數據」頁正常顯示新紀錄；「報告」頁（圖表）確認正常無紅屏",
+        "2026-07-20 | sqlite3 直接查容器內 sparkfit.db（含 -wal/-shm）| measurements 表新增 2026-07-20 這筆記錄，欄位值與畫面輸入一致",
+        "2026-07-20 | xcrun simctl terminate + launch 後再次 sqlite3 查詢 | 2026-07-20 記錄仍存在，資料持久化正常；截圖 docs/ios-002-restart-persist.png"
+      ],
       "notes": ""
     },
     {
