@@ -9,11 +9,22 @@
 - 儲存庫根目錄：/Users/mimi/Documents/SPARKFIT
 - 標準啟動路徑：`RUN_START_COMMAND=1 ./init.sh`（實際指令見 init.sh 的 START_CMD）
 - 標準驗證路徑：./init.sh（pnpm install + pnpm typecheck；專案目前沒有任何測試檔）
-- 目前最高優先級未完成功能：test-001（建立基礎單元測試，讓基準驗證回到 pnpm test）
-- 目前 blocker：無
-- 背景：ios-001、ios-002 已 passing；專案完全沒有測試，init.sh 暫用 typecheck 當基準驗證；eas.json 已存在但缺 iOS profile
+- 目前最高優先級未完成功能：ios-004 EAS iOS 雲端建置成功（blocked：需先申請 Apple Developer Program 帳號）
+- 目前 blocker：ios-004/ios-005 需要 Apple Developer Program（$99/年），尚未申請
+- 背景：ios-001、ios-002、test-001 皆已 passing；標準驗證路徑已改回 `pnpm test`（21 tests passed）；eas.json 已存在但缺 iOS profile
 
 ## 工作階段日誌
+
+### 工作階段 004
+
+- 日期：2026-07-20
+- 本輪目標：完成 test-001（建立基礎單元測試，讓基準驗證回到 pnpm test）
+- 已完成：新增 3 個測試檔（date.test.ts、settingsStore.test.ts、useMeasurements.test.ts），共 21 個測試，涵蓋純函數（日期格式化）、zustand store setter、SQLite 服務層 hook 的 SQL 語句與參數正確性；`init.sh` 的 `VERIFY_CMD` 從 `pnpm typecheck` 改回 `pnpm test`
+- 執行過的驗證：`pnpm test`（21 passed）、`pnpm typecheck`（無錯誤）、`./init.sh`
+- 已擷取證據：見 feature_list.json test-001 evidence
+- 提交記錄：（見本輪 commit）
+- 已知風險或未解決問題：useBackup.ts（匯出/匯入 hook）尚未寫測試，牽涉較多原生模組（FileSystem/Sharing/DocumentPicker/Alert），優先度較低，之後有餘力可以補
+- 下一步最佳動作：等使用者申請好 Apple Developer Program 後才能繼續 ios-004
 
 ### 工作階段 003
 
