@@ -8,12 +8,23 @@
 
 - 儲存庫根目錄：/Users/mimi/Documents/SPARKFIT
 - 標準啟動路徑：`RUN_START_COMMAND=1 ./init.sh`（實際指令見 init.sh 的 START_CMD）
-- 標準驗證路徑：./init.sh（pnpm install + pnpm typecheck；專案目前沒有任何測試檔）
-- 目前最高優先級未完成功能：ios-004 EAS iOS 雲端建置成功（blocked：需先申請 Apple Developer Program 帳號）
-- 目前 blocker：ios-004/ios-005 需要 Apple Developer Program（$99/年），尚未申請
-- 背景：ios-001、ios-002、test-001 皆已 passing；標準驗證路徑已改回 `pnpm test`（21 tests passed）；eas.json 已存在但缺 iOS profile
+- 標準驗證路徑：./init.sh（pnpm install + pnpm test；2026-07-20 為 21 tests passed；另有 pnpm typecheck）
+- 目前最高優先級未完成功能：ios-005 TestFlight 內部測試
+- 目前 blocker：無
+- 背景：Apple Developer Program 已生效（2026-07-20）；ios-001、ios-002、test-001、ios-004 皆已 passing，EAS 雲端建置成功產出 .ipa
 
 ## 工作階段日誌
+
+### 工作階段 005
+
+- 日期：2026-07-20
+- 本輪目標：完成 ios-004（EAS iOS 雲端建置成功）
+- 已完成：補齊 eas.json 的 iOS profile（原本只有 Android）並套上 Node 22.13.0 修法；`eas init` 建立 EAS 專案；`eas build --platform ios --profile production`（互動模式）一次就成功
+- 執行過的驗證：實際跑 EAS 雲端建置，一次成功
+- 已擷取證據：見 feature_list.json ios-004 evidence，含 build URL 與 .ipa 下載連結
+- 提交記錄：（見本輪 commit）
+- 已知風險或未解決問題：無新增
+- 下一步最佳動作：開始 ios-005（TestFlight 內部測試，需要實體 iPhone）
 
 ### 工作階段 004
 
