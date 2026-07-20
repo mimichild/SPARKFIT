@@ -21,14 +21,17 @@
       "area": "ios",
       "title": "iOS 模擬器啟動 App 並截圖存證",
       "user_visible_behavior": "在 iOS 模擬器上可以看到 SPARKFIT 啟動並顯示首頁。",
-      "status": "not_started",
+      "status": "passing",
       "verification": [
         "執行 npx expo run:ios（或 pnpm ios）。",
         "確認建置成功且模擬器開啟 App、首頁正常渲染無紅屏。",
         "擷取模擬器截圖存入 docs/ 作為證據。"
       ],
-      "evidence": [],
-      "notes": "本專案尚未 build 過 iOS。"
+      "evidence": [
+        "2026-07-20 | npx expo run:ios | 第一次 build（本專案先前從未 build 過 iOS），Build Succeeded，0 error(s)，沒有踩到 SPARKPLATE/SPARKSHAPE 那種 RCTBridge/fmt 原生層問題，安裝並開啟於 iPhone 17 Pro 模擬器",
+        "2026-07-20 | xcrun simctl io booted screenshot docs/ios-001-simulator-home.png | 首頁正常顯示「SPARK FIT」標題與開始使用按鈕，無紅屏錯誤"
+      ],
+      "notes": "本專案先前從未 build 過 iOS，這次是第一次，順利通過，沒有額外原生層修復需求（native-001 這類項目本專案不需要）。"
     },
     {
       "id": "ios-002",
