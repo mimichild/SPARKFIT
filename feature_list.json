@@ -78,14 +78,17 @@
       "area": "ios",
       "title": "EAS iOS 雲端建置成功",
       "user_visible_behavior": "EAS Build 產出可安裝的 iOS build。",
-      "status": "blocked",
+      "status": "passing",
       "verification": [
         "確認 Apple Developer 帳號可用；補齊 eas.json 的 iOS profile（目前只有 Android）。",
         "執行 eas build --platform ios。",
         "確認 expo.dev 建置狀態 finished，記錄 build URL。"
       ],
-      "evidence": [],
-      "notes": "2026-07-20 blocked：ios-001/ios-002/test-001 皆已完成，唯一前置條件剩 Apple Developer Program（$99/年）尚未申請，需使用者決定是否付費申請。已嘗試：無需嘗試，純屬外部帳號申請前置。建議解法：使用者申請 Apple Developer Program 後再回來繼續；帳號未辦好前不要空等此項。"
+      "evidence": [
+        "2026-07-20 | 補齊 eas.json 的 iOS profile（development/preview/production 都加上 ios 設定與 \"node\": \"22.13.0\"）、新增 submit.production.ios.appleId | npx eas-cli init 建立 EAS 專案 @mimichild/sparkfit，projectId 904fed29-262a-4e5a-967a-5354aa306fa9",
+        "2026-07-20 | npx eas-cli build --platform ios --profile production（互動模式，使用者本人建立 Provisioning Profile）| Build finished，產出 .ipa：https://expo.dev/artifacts/eas/iQHrhznmHus8fXprDpbDGZ0Qd2mDORxTQgQP6JjlVnQ.ipa；建置頁：https://expo.dev/accounts/mimichild/projects/sparkfit/builds/fd46f40f-3032-4944-bab2-dd5ad09c475f；一次就成功"
+      ],
+      "notes": ""
     },
     {
       "id": "ios-005",
