@@ -96,15 +96,17 @@
       "area": "ios",
       "title": "TestFlight 內部測試",
       "user_visible_behavior": "使用者的 iPhone 能從 TestFlight 安裝並正常使用核心功能。",
-      "status": "in_progress",
+      "status": "passing",
       "verification": [
         "eas submit --platform ios 並在 App Store Connect 加入內部測試群組。",
         "實機安裝啟動，重跑 ios-002 核心流程。"
       ],
       "evidence": [
-        "2026-07-21 | eas submit --platform ios --profile production --latest（使用者本人於 Terminal.app 互動執行）| Submission 成功，Build ID fd46f40f-3032-4944-bab2-dd5ad09c475f（App Version 1.0.0, Build 1）已上傳，https://appstoreconnect.apple.com/apps/6793043215/testflight/ios"
+        "2026-07-21 | eas submit --platform ios --profile production --latest（使用者本人於 Terminal.app 互動執行）| Submission 成功，Build ID fd46f40f-3032-4944-bab2-dd5ad09c475f（App Version 1.0.0, Build 1）已上傳，https://appstoreconnect.apple.com/apps/6793043215/testflight/ios",
+        "2026-07-21 | 使用者本人於 App Store Connect 將 Build 1 加入內部測試群組，iPhone 上安裝 TestFlight 並成功安裝、開啟 SPARKFIT | 啟動正常無閃退",
+        "2026-07-21 | 使用者手動操作：核心流程（新增身體數據紀錄、圖表頁、日曆頁、關閉重開確認資料持久化）| 使用者確認「測試都沒有問題」"
       ],
-      "notes": "依賴 ios-004。2026-07-21：已完成 eas submit，剩下加入內部測試群組＋實機驗證需等使用者有 iPhone 可測時才能做。"
+      "notes": "依賴 ios-004。實機測試時使用者反映 App icon 看起來比其他 App 軟（無描邊）；查證來源檔案本身 1024x1024、邊緣反鋸齒只有 1-2px，非解析度或檔案損壞問題，純屬設計上沒有描邊（跟 SPARKSHAPE 同款式，SPARKPLATE 則有描邊）。使用者決定不處理，故未另開 feature 追蹤。"
     }
   ]
 }
