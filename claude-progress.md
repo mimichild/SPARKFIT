@@ -8,12 +8,28 @@
 
 - 儲存庫根目錄：/Users/mimi/Documents/SPARKFIT
 - 標準啟動路徑：`RUN_START_COMMAND=1 ./init.sh`（實際指令見 init.sh 的 START_CMD）
-- 標準驗證路徑：./init.sh（pnpm install + pnpm test；2026-07-20 為 21 tests passed；另有 pnpm typecheck）
+- 標準驗證路徑：./init.sh（pnpm install + pnpm test；2026-07-22 為 21 tests passed；另有 pnpm typecheck）
 - 目前最高優先級未完成功能：無（feature_list.json 目前全部 passing）
 - 目前 blocker：無
-- 背景：Apple Developer Program 已生效（2026-07-20）；ios-001～ios-005、test-001 皆已 passing（含 TestFlight 實機驗證），EAS 雲端建置成功產出 .ipa；App icon 因無描邊視覺上較軟，使用者確認不處理
+- 背景：Apple Developer Program 已生效（2026-07-20）；ios-001～ios-006、test-001 皆已 passing（含 TestFlight 實機驗證）；App icon 加了描邊解決對比度偏軟問題（跟 SPARKPLATE 同款風格）
 
 ## 工作階段日誌
+
+### 工作階段 008
+
+- 日期：2026-07-22
+- 本輪目標：修 ios-006（App icon 桌面顯示偏模糊）
+- 已完成：
+  - 跟使用者確認處理方向：選擇「加一圈描邊」（跟 SPARKPLATE 同款風格），不是重新設計整張圖示
+  - 用 ImageMagick 量測 SPARKPLATE icon.png 的描邊粗細/顏色（約 4-6px、灰色 rgb(150~185) 範圍）當參考，量出 SPARKFIT 圓形的圓心（512,512）與半徑（約 458px），畫一圈對應風格的灰色描邊
+  - `npx expo prebuild --platform ios` 重新產生資源，確認 iOS icon 資源已更新成加了描邊的版本
+  - 順便確認 SPARKFIT 的 icon.png 本身乾淨，沒有 SPARKSHAPE 那種背景棋盤格殘留問題
+  - Android 的 adaptiveIcon 用另一張獨立檔案，這次沒有動（使用者反映的是 iPhone 桌面圖示，範圍以外）
+- 執行過的驗證：`./init.sh`（21 tests passed）、prebuild 產出檔案視覺比對
+- 已擷取證據：見 feature_list.json ios-006 evidence
+- 提交記錄：（本輪 commit）
+- 已知風險或未解決問題：無
+- 下一步最佳動作：feature_list.json 目前全部 passing，無待辦項目
 
 ### 工作階段 007
 

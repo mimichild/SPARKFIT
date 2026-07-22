@@ -114,12 +114,19 @@
       "area": "icon",
       "title": "App icon 桌面顯示偏模糊，需重新設計",
       "user_visible_behavior": "使用者在 iPhone 桌面把 SPARKFIT icon 跟其他 4 個 SPARK App 的 icon 並排比較，圓形與「FIT」字樣明顯比其他 App 模糊、輪廓不清楚。",
-      "status": "not_started",
+      "status": "passing",
       "verification": [
-        "TBD：規劃時再補齊具體驗證步驟。"
+        "跟使用者確認修改方向（加描邊／加深背景／不處理）。",
+        "重新產生 icon 素材，肉眼比對是否比改動前更清楚。",
+        "npx expo prebuild --platform ios（重新產生 iOS icon 資源）確認無錯誤。"
       ],
-      "evidence": [],
-      "notes": "2026-07-21 查證：assets/images/icon.png 是 1024x1024、圓形邊緣反鋸齒 1-2px、文字筆畫邊緣也是正常銳利（用 ImageMagick 裁切放大檢查過），沒有發現解析度不足或檔案本身失焦的技術性瑕疵，png color_type 是 Truecolor（無 alpha）。目前推測是設計上的對比度問題：淺粉色圓形無描邊，在桌面背景上輪廓辨識度較低，容易被主觀感覺成「模糊」，但這只是推測，不是確認的根因。之後真的要修時，建議先跟使用者確認到底是要（a）加描邊增加對比、還是（b）真的要重新設計一張更銳利/更高對比的圖示，不要直接假設是加描邊就能解決。"
+      "evidence": [
+        "2026-07-22 | AskUserQuestion 確認方向 | 使用者選擇「加一圈描邊」（跟 SPARKPLATE 同款風格）",
+        "2026-07-22 | 用 ImageMagick 量測 SPARKPLATE icon.png 的描邊座標/顏色/粗細（約 4-6px、灰色 rgb(150~185) 範圍）與 SPARKFIT 圓形的圓心/半徑（中心約 512,512、半徑約 458px），畫一圈對應的灰色描邊：magick icon.png -fill none -stroke \"#999999\" -strokewidth 5 -draw \"circle 512,512 512,54\" | 產生結果視覺上與 SPARKPLATE 風格一致，圓形輪廓明顯更清楚",
+        "2026-07-22 | npx expo prebuild --platform ios | 成功重新產生 ios/SPARKFIT/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png，確認新產生的檔案已是加了描邊的版本",
+        "2026-07-22 | ./init.sh | 21 tests passed"
+      ],
+      "notes": "2026-07-21 查證：assets/images/icon.png 是 1024x1024、圓形邊緣反鋸齒 1-2px、文字筆畫邊緣也是正常銳利，沒有發現解析度不足或檔案本身失焦的技術性瑕疵，png color_type 是 Truecolor（無 alpha）。也確認過沒有 SPARKSHAPE 那種背景棋盤格殘留問題，是乾淨的檔案。2026-07-22 跟使用者確認方向後加了描邊解決對比度問題。Android 的 adaptiveIcon 用的是另一張獨立檔案（assets/images/adaptive-icon.png），使用者反映的是 iPhone 桌面圖示，這次沒有動 Android 那張，範圍以外。"
     }
   ]
 }
