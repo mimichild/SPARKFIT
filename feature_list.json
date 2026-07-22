@@ -124,9 +124,11 @@
         "2026-07-22 | AskUserQuestion 確認方向 | 使用者選擇「加一圈描邊」（跟 SPARKPLATE 同款風格）",
         "2026-07-22 | 用 ImageMagick 量測 SPARKPLATE icon.png 的描邊座標/顏色/粗細（約 4-6px、灰色 rgb(150~185) 範圍）與 SPARKFIT 圓形的圓心/半徑（中心約 512,512、半徑約 458px），畫一圈對應的灰色描邊：magick icon.png -fill none -stroke \"#999999\" -strokewidth 5 -draw \"circle 512,512 512,54\" | 產生結果視覺上與 SPARKPLATE 風格一致，圓形輪廓明顯更清楚",
         "2026-07-22 | npx expo prebuild --platform ios | 成功重新產生 ios/SPARKFIT/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png，確認新產生的檔案已是加了描邊的版本",
-        "2026-07-22 | ./init.sh | 21 tests passed"
+        "2026-07-22 | ./init.sh | 21 tests passed",
+        "2026-07-22 | eas submit 連續兩次失敗（Something went wrong）| 查出兩個根因並修好：(1) 描邊指令意外把 icon.png 轉成帶 alpha 的 RGBA，Apple 不接受，magick -alpha off 攤平回 Truecolor；(2) eas.json 缺少 appVersionSource/autoIncrement，build number 一直卡在 1、跟當天稍早已上傳的 Build 1 衝突，補上設定後 build number 正確遞增到 2",
+        "2026-07-22 | eas build + eas submit（Build 2，修好上述兩個問題後）→ App Store Connect 加入內部測試群組 → iPhone TestFlight 安裝 | 使用者實機確認「現在看起來都正常了」"
       ],
-      "notes": "2026-07-21 查證：assets/images/icon.png 是 1024x1024、圓形邊緣反鋸齒 1-2px、文字筆畫邊緣也是正常銳利，沒有發現解析度不足或檔案本身失焦的技術性瑕疵，png color_type 是 Truecolor（無 alpha）。也確認過沒有 SPARKSHAPE 那種背景棋盤格殘留問題，是乾淨的檔案。2026-07-22 跟使用者確認方向後加了描邊解決對比度問題。Android 的 adaptiveIcon 用的是另一張獨立檔案（assets/images/adaptive-icon.png），使用者反映的是 iPhone 桌面圖示，這次沒有動 Android 那張，範圍以外。"
+      "notes": "2026-07-21 查證：assets/images/icon.png 是 1024x1024、圓形邊緣反鋸齒 1-2px、文字筆畫邊緣也是正常銳利，沒有發現解析度不足或檔案本身失焦的技術性瑕疵，png color_type 是 Truecolor（無 alpha）。也確認過沒有 SPARKSHAPE 那種背景棋盤格殘留問題，是乾淨的檔案。2026-07-22 跟使用者確認方向後加了描邊解決對比度問題。Android 的 adaptiveIcon 用的是另一張獨立檔案（assets/images/adaptive-icon.png），使用者反映的是 iPhone 桌面圖示，這次沒有動 Android 那張，範圍以外。實際出貨到 TestFlight 時踩到兩個環境坑（見上方 evidence）：ImageMagick 加描邊的 draw 指令意外產生 alpha 通道被 Apple 拒絕；eas.json 一直沒設定 appVersionSource/autoIncrement，導致 build number 長期卡在 1（這其實是這個專案從一開始就存在的設定缺口，之前沒發現是因為沒有重複 build 過同一個 App Version）。"
     }
   ]
 }
