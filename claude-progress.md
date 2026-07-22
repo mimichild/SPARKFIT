@@ -11,9 +11,26 @@
 - 標準驗證路徑：./init.sh（pnpm install + pnpm test；2026-07-22 為 21 tests passed；另有 pnpm typecheck）
 - 目前最高優先級未完成功能：無（feature_list.json 目前全部 passing）
 - 目前 blocker：無
-- 背景：Apple Developer Program 已生效（2026-07-20）；ios-001～ios-006、test-001 皆已 passing（含 TestFlight 實機驗證）；App icon 加了描邊解決對比度偏軟問題（跟 SPARKPLATE 同款風格）
+- 背景：Apple Developer Program 已生效（2026-07-20）；ios-001～ios-006、test-001 皆已 passing（含 TestFlight 實機驗證）；App icon 加了描邊解決對比度偏軟問題並實機確認（跟 SPARKPLATE 同款風格）；已設定 EAS Update（OTA）支援；eas.json 補上 appVersionSource remote／autoIncrement／ascAppId（這個專案原本完全沒設定，這次一次補齊）
 
 ## 工作階段日誌
+
+### 工作階段 009
+
+- 日期：2026-07-22
+- 本輪目標：把 ios-006 icon 修復實際出貨到 TestFlight 並實機確認
+- 已完成：
+  - 設定 EAS Update（OTA）支援；eas.json 加 `ascAppId`
+  - `eas build` + `eas submit` 連續兩次失敗（Something went wrong，籠統錯誤），查出兩個根因：
+    1. 描邊指令（`magick ... -draw "circle ..."`）意外把 `icon.png` 轉成帶 alpha 通道的 RGBA，Apple 不接受帶透明通道的 App icon；用 `-alpha off` 攤平回 Truecolor 解決
+    2. `eas.json` 原本完全沒有 `appVersionSource`/`autoIncrement`，導致每次建置的 build number 都固定是 1，跟當天稍早 ios-005 就已經上傳過的 Build 1 衝突；補上這兩個設定後 build number 正確遞增到 2
+  - 兩個問題都修好後重新 `eas build` + `eas submit`（Build 2）成功 → 使用者在 App Store Connect 加入測試群組 → iPhone TestFlight 安裝
+  - 使用者實機確認「現在看起來都正常了」
+- 執行過的驗證：`./init.sh`（21 tests passed）、實機 TestFlight 圖示確認、eas submit 成功上傳
+- 已擷取證據：見 feature_list.json ios-006 evidence
+- 提交記錄：（本輪 commit）
+- 已知風險或未解決問題：無
+- 下一步最佳動作：feature_list.json 全部 passing，無待辦項目
 
 ### 工作階段 008
 
