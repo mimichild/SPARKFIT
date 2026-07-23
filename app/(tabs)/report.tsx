@@ -2,15 +2,15 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ScrollView } from 'react-native-gesture-handler';
 import {
   View, Text, TouchableOpacity,
-  StyleSheet, Dimensions, Modal, Platform,
+  StyleSheet, Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { LineChart } from 'react-native-chart-kit';
 
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useMeasurements, type Measurement } from '@/hooks/useMeasurements';
+import { DataCalendarModal } from '@/components/DataCalendarModal';
 import { Colors } from '@/constants/colors';
 
 const SCREEN_W = Dimensions.get('window').width;
@@ -390,47 +390,14 @@ export default function ReportScreen() {
         <View style={{ height: 40 }} />
       </ScrollView>
 
-      {/* iOS Date Picker Modal */}
-      {Platform.OS === 'ios' && (
-        <Modal visible={showPicker} transparent animationType="slide">
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={() => setShowPicker(false)}
-          >
-            <View style={styles.pickerSheet}>
-              <View style={styles.pickerHeader}>
-                <TouchableOpacity onPress={() => setShowPicker(false)}>
-                  <Text style={styles.pickerCancel}>取消</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => confirmDate(tempDate)}>
-                  <Text style={[styles.pickerConfirm, { color: themeColor }]}>確認</Text>
-                </TouchableOpacity>
-              </View>
-              <DateTimePicker
-                value={tempDate}
-                mode="date"
-                display="spinner"
-                onChange={(_, d) => d && setTempDate(d)}
-                locale="zh-TW"
-              />
-            </View>
-          </TouchableOpacity>
-        </Modal>
-      )}
-
-      {/* Android Date Picker */}
-      {Platform.OS === 'android' && showPicker && (
-        <DateTimePicker
-          value={tempDate}
-          mode="date"
-          display="default"
-          onChange={(_, d) => {
-            setShowPicker(false);
-            if (d) confirmDate(d);
-          }}
-        />
-      )}
+      {/* 日期選擇月曆：跟數據頁（app/(tabs)/index.tsx）共用同一個 DataCalendarModal，維持兩個畫面的日期選擇體驗一致 */}
+      <DataCalendarModal
+        visible={showPicker}
+        selectedDate={tempDate}
+        themeColor={themeColor}
+        onConfirm={confirmDate}
+        onCancel={() => setShowPicker(false)}
+      />
     </SafeAreaView>
     </View>
   );
@@ -576,27 +543,4 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   emptyText: { fontSize: 14, color: Colors.textSecondary },
-
-  // Date picker modal
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'flex-end',
-  },
-  pickerSheet: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingBottom: 32,
-  },
-  pickerHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  pickerCancel: { fontSize: 15, color: '#999999' },
-  pickerConfirm: { fontSize: 15, fontWeight: '600' },
 });
