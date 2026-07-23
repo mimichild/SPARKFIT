@@ -9,12 +9,21 @@
 - 儲存庫根目錄：/Users/mimi/Documents/SPARKFIT
 - 標準啟動路徑：`RUN_START_COMMAND=1 ./init.sh`（實際指令見 init.sh 的 START_CMD）
 - 標準驗證路徑：./init.sh（pnpm install + pnpm test；2026-07-23 為 41 tests passed；另有 pnpm typecheck）
-- monetization-001：passing（2026-07-23，使用者實機逐一測試個別鎖點確認無誤）；已移除首頁互連連結（見工作階段 013）；AdMob 真實 iOS App ID 已設定（ca-app-pub-8914492142878610~7474624319），廣告單元 ID 待提供；Android 維持 Google 測試 ID
+- monetization-001：passing（2026-07-23，使用者實機逐一測試個別鎖點確認無誤）；已移除首頁互連連結（見工作階段 013）；AdMob 真實 iOS App ID（ca-app-pub-8914492142878610~7474624319）與廣告單元 ID（ca-app-pub-8914492142878610/9526072587）皆已設定；Android 維持 Google 測試 ID；待辦：跑一次原生 build 讓新 ID 生效、之後設定 RevenueCat
 - 目前最高優先級未完成功能：無（下一輪從 feature_list.json 選下一個 not_started 功能）
 - 目前 blocker：無
 - 背景：Apple Developer Program 已生效（2026-07-20）；ios-001～ios-009、test-001 皆已 passing；App icon 加了描邊解決對比度偏軟問題並實機確認；已設定 EAS Update（OTA）支援；eas.json 補上 appVersionSource remote／autoIncrement／ascAppId；報告頁日期選擇器統一成跟數據頁一樣的月曆樣式；修好「清空紀錄仍在月曆顯示紅點」的資料查詢 bug；新增真正的刪除單日紀錄功能（垃圾桶圖示＋二次確認，iOS/Android 共用）
 
 ## 工作階段日誌
+
+### 工作階段 016
+
+- 日期：2026-07-23
+- 本輪目標：使用者在 AdMob 後台建好橫幅廣告單元，把測試版位換成正式的
+- 已完成：`src/constants/monetization.ts` 的 `BANNER_AD_UNIT_ID` 改成 `Platform.select`，iOS 用正式 ID `ca-app-pub-8914492142878610/9526072587`，Android 維持 `TestIds.BANNER`
+- 執行過的驗證：`npx tsc --noEmit`（無新增錯誤）；`npx jest`（6 suites、41 tests 全過）
+- 已知風險或未解決問題：需要重新原生 build 才會真正生效；AdMob 應用程式狀態目前是「需審核」
+- 下一步最佳動作：找時間跑一次原生 build 讓新 ID 生效；之後設定 RevenueCat
 
 ### 工作階段 015
 
