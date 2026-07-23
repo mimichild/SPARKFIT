@@ -191,7 +191,7 @@
       "area": "monetization",
       "title": "AdMob 橫幅廣告＋RevenueCat 訂閱＋Pro 功能鎖（複製 SPARKWEAR 範本）",
       "user_visible_behavior": "iOS 免費使用者：無法使用分析頁（分頁仍顯示，點進去是升級提示畫面）、主題色、匯出匯入，點到這些功能會跳出升級提示；首頁、三個分頁（數據/報告/分析，掛在分頁列下方共用一條）底部能看到橫幅廣告。iOS Pro 使用者（RevenueCat 訂閱，或按「恢復購買」）：以上功能全部解鎖、無廣告。Android：沒有付費入口，一律視為 Pro，全部功能免費開放、不顯示廣告。",
-      "status": "in_progress",
+      "status": "passing",
       "verification": [
         "pnpm test 全部通過（含新增 useIsPro.test.ts/useProGate.test.ts/purchases.test.ts）。",
         "npx tsc --noEmit -p . 無新增型別錯誤。",
@@ -203,7 +203,8 @@
         "2026-07-23 | ./init.sh | 41 tests passed（含新增 useIsPro.test.ts 3 項、useProGate.test.ts 3 項、purchases.test.ts 11 項）",
         "2026-07-23 | npx tsc --noEmit -p . | 無錯誤",
         "2026-07-23 | npx expo prebuild --platform ios && pod install | RNGoogleMobileAds 16.3.4、RevenueCat 5.81.1 成功安裝",
-        "2026-07-23 | npx expo run:ios 建置成功（0 error）並在 iPhone 17 Pro 模擬器實測 | 首頁正常顯示且能看到 AdMob 測試廣告；廣告是真的可點擊的廣告單元（不小心點到後正確開啟 Safari 到 Google AdMob 頁面，證實廣告元件確實有正常載入渲染，不是空殼）"
+        "2026-07-23 | npx expo run:ios 建置成功（0 error）並在 iPhone 17 Pro 模擬器實測 | 首頁正常顯示且能看到 AdMob 測試廣告；廣告是真的可點擊的廣告單元（不小心點到後正確開啟 Safari 到 Google AdMob 頁面，證實廣告元件確實有正常載入渲染，不是空殼）",
+        "2026-07-23 | 使用者在模擬器逐一測試個別鎖點（含分析頁）| 使用者確認「測試都沒問題」；過程中發現同一時間模擬器上多個 App 共用 Metro 連接埠導致載入到別的 App 的 JS bundle 而崩潰，切回本 App 專屬的 Metro 後排除"
       ],
       "notes": "對應 monetization_spec_5_apps 記憶；複製 SPARKWEAR/SPARKPLATE/SPARKSHAPE 的 useProGate/useIsPro/AdBanner/purchases.ts/monetization.ts 範本。react-native-google-mobile-ads 直接鎖定 16.3.4（Kotlin 版本天花板問題，見 SPARKWEAR feedback_android_native_stale_config 記憶規則五）。這個 App 有獨立的 app/settings.tsx 路由（不是 Modal），所以升級提示直接 router.push('/settings')，跟 SPARKWEAR 原始寫法一樣，不需要 pendingSettingsOpen flag。settingsStore.ts 用 zustand persist middleware（不是手動 AsyncStorage 讀寫），setProUnlocked 是同步函式（persist middleware 自動處理持久化）。分析頁（app/(tabs)/analysis.tsx）用『在所有 hooks 呼叫完之後、其餘邏輯之前 return 鎖定畫面』的寫法達成『分頁仍顯示但點進去是升級提示』，不是把整個 Tabs.Screen 拿掉。分頁列（app/(tabs)/_layout.tsx）原本手動加了 paddingBottom:24 對應安全區，因為現在下面接 AdBanner 改成 paddingBottom:6。這次在模擬器上用滑鼠座標點擊「設定」入口時，因為首頁的廣告版位換了不同尺寸（320x100 固定尺寸廣告，跟先前抓座標時的自適應橫幅大小不同），連續點了幾次不是點到廣告誤開 Safari 就是完全沒反應，一直對不準「設定」的實際位置，沒能實際打開設定頁確認任何一個鎖點；只確認了首頁正常渲染、廣告是真的有在載入渲染的可點擊單元（誤觸後正確開啟 AdMob 官網證實不是空殼）。個別鎖點的驗證證據目前只有單元測試，待使用者自己在模擬器/實機測一輪確認後改 passing（跟前兩個 App 走同樣流程）。"
     }
