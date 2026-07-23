@@ -9,11 +9,21 @@
 - 儲存庫根目錄：/Users/mimi/Documents/SPARKFIT
 - 標準啟動路徑：`RUN_START_COMMAND=1 ./init.sh`（實際指令見 init.sh 的 START_CMD）
 - 標準驗證路徑：./init.sh（pnpm install + pnpm test；2026-07-23 為 41 tests passed；另有 pnpm typecheck）
-- 目前最高優先級未完成功能：monetization-001（in_progress）——AdMob＋RevenueCat＋Pro 功能鎖，複製自 SPARKWEAR/SPARKPLATE/SPARKSHAPE 範本；build/tsc/單元測試都過，這次模擬器上因為廣告版位尺寸關係一直點不準「設定」入口，個別鎖點還沒實際驗證過，待使用者測一輪
+- monetization-001：passing（2026-07-23，使用者實機逐一測試個別鎖點確認無誤）；已移除首頁互連連結（見工作階段 013）
+- 目前最高優先級未完成功能：無（下一輪從 feature_list.json 選下一個 not_started 功能）
 - 目前 blocker：無
 - 背景：Apple Developer Program 已生效（2026-07-20）；ios-001～ios-009、test-001 皆已 passing；App icon 加了描邊解決對比度偏軟問題並實機確認；已設定 EAS Update（OTA）支援；eas.json 補上 appVersionSource remote／autoIncrement／ascAppId；報告頁日期選擇器統一成跟數據頁一樣的月曆樣式；修好「清空紀錄仍在月曆顯示紅點」的資料查詢 bug；新增真正的刪除單日紀錄功能（垃圾桶圖示＋二次確認，iOS/Android 共用）
 
 ## 工作階段日誌
+
+### 工作階段 013
+
+- 日期：2026-07-23
+- 本輪目標：移除首頁跳轉 SPARK SHAPE/SPARK PLATE 的互連連結（使用者要求跟 SPARKSHAPE/SPARKPLATE 同步處理）
+- 已完成：`app/index.tsx` 移除 `openApp()`、`APP_DOWNLOAD_URLS`、`appsRow` 連結區塊與相關 style、未用到的 `Alert`/`Linking` import
+- 執行過的驗證：`npx tsc --noEmit`（無錯誤）；`npx jest`（6 suites、41 tests 全過）
+- 已知風險或未解決問題：無（`assets/images/favicon.jpeg` 為既有未追蹤檔案，非本次改動，維持不加入版控）
+- 下一步最佳動作：下次工作階段開始時照常從 feature_list.json 選下一個 not_started 功能
 
 ### 工作階段 012
 
