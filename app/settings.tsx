@@ -1,21 +1,57 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useBackup } from '@/hooks/useBackup';
+import { useProGate } from '@/hooks/useProGate';
+import { AdBanner } from '@/components/AdBanner';
+import { purchasePro, restorePurchases } from '@/services/purchases';
 import { THEME_COLORS } from '@/constants';
 import { Colors } from '@/constants/colors';
 
 export default function SettingsScreen() {
   const themeColor = useSettingsStore((s) => s.themeColor);
   const setThemeColor = useSettingsStore((s) => s.setThemeColor);
+  const setProUnlocked = useSettingsStore((s) => s.setProUnlocked);
   const selectedName = THEME_COLORS.find((c) => c.value === themeColor)?.label ?? '';
+  const { isProUnlocked, requirePro } = useProGate();
+  const [purchasing, setPurchasing] = useState(false);
+  const [restoring, setRestoring] = useState(false);
 
   const { progress, backupStatus, message, exportBackup, importBackup, isRunning } = useBackup();
 
   const progressColor = backupStatus === 'error' ? '#FF6B6B' : themeColor;
   const progressBg = backupStatus === 'error' ? '#FFE0E0' : themeColor + '22';
+
+  async function handlePurchase() {
+    setPurchasing(true);
+    try {
+      const isPro = await purchasePro();
+      if (isPro) {
+        setProUnlocked(true);
+        Alert.alert('升級成功', 'Pro 功能已啟用');
+      }
+    } catch (e) {
+      Alert.alert('升級失敗', e instanceof Error ? e.message : '請稍後再試');
+    } finally {
+      setPurchasing(false);
+    }
+  }
+
+  async function handleRestore() {
+    setRestoring(true);
+    try {
+      const isPro = await restorePurchases();
+      setProUnlocked(isPro);
+      Alert.alert(isPro ? '還原成功' : '沒有找到可還原的購買紀錄', isPro ? 'Pro 功能已啟用' : '若你曾經購買過，請確認使用的是同一個 Apple ID');
+    } catch (e) {
+      Alert.alert('還原失敗', e instanceof Error ? e.message : '請稍後再試');
+    } finally {
+      setRestoring(false);
+    }
+  }
 
   return (
     <>
@@ -30,8 +66,31 @@ export default function SettingsScreen() {
       <SafeAreaView style={styles.container} edges={['bottom']}>
         <ScrollView contentContainerStyle={styles.content}>
 
+          {/* Pro 解鎖 */}
+          <Text style={styles.sectionTitle}>PRO 解鎖</Text>
+          {Platform.OS === 'android' ? (
+            <Text style={styles.proBadge}>✓ Pro 已解鎖（Android 版全功能免費開放）</Text>
+          ) : isProUnlocked ? (
+            <Text style={styles.proBadge}>✓ Pro 已解鎖</Text>
+          ) : (
+            <View style={{ marginBottom: 8 }}>
+              <Text style={styles.hintText}>升級 Pro 即可解鎖分析頁、主題色、匯出匯入，並移除廣告</Text>
+              <TouchableOpacity
+                style={[styles.exportBtn, { backgroundColor: themeColor, marginTop: 12 }]}
+                activeOpacity={0.8}
+                onPress={handlePurchase}
+                disabled={purchasing}
+              >
+                <Text style={styles.exportBtnText}>{purchasing ? '處理中…' : '升級 Pro'}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleRestore} disabled={restoring} activeOpacity={0.7} style={{ alignItems: 'center', paddingVertical: 6 }}>
+                <Text style={{ color: themeColor, fontSize: 13, fontWeight: '600' }}>{restoring ? '還原中…' : '恢復購買'}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
           {/* 主題顏色 */}
-          <Text style={styles.sectionTitle}>主題顏色</Text>
+          <Text style={[styles.sectionTitle, { marginTop: 24 }]}>主題顏色</Text>
           <View style={styles.colorGrid}>
             {THEME_COLORS.map((color) => {
               const isSelected = themeColor === color.value;
@@ -39,7 +98,7 @@ export default function SettingsScreen() {
                 <TouchableOpacity
                   key={color.value}
                   style={styles.colorItem}
-                  onPress={() => setThemeColor(color.value)}
+                  onPress={() => { if (!requirePro('主題色')) return; setThemeColor(color.value); }}
                   activeOpacity={0.75}
                 >
                   <View
@@ -104,7 +163,7 @@ export default function SettingsScreen() {
           <TouchableOpacity
             style={[styles.exportBtn, { backgroundColor: themeColor }, isRunning && styles.btnDisabled]}
             activeOpacity={0.8}
-            onPress={exportBackup}
+            onPress={() => { if (!requirePro('匯出備份')) return; exportBackup(); }}
             disabled={isRunning}
           >
             <Text style={styles.exportBtnText}>匯出備份</Text>
@@ -114,7 +173,7 @@ export default function SettingsScreen() {
           <TouchableOpacity
             style={[styles.importBtn, { borderColor: themeColor }, isRunning && styles.btnDisabled]}
             activeOpacity={0.8}
-            onPress={importBackup}
+            onPress={() => { if (!requirePro('匯入備份')) return; importBackup(); }}
             disabled={isRunning}
           >
             <Text style={[styles.importBtnText, { color: themeColor }]}>匯入備份</Text>
@@ -126,6 +185,8 @@ export default function SettingsScreen() {
           </Text>
 
           <View style={{ height: 32 }} />
+
+          <AdBanner />
         </ScrollView>
       </SafeAreaView>
     </>
@@ -147,6 +208,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 20,
     textTransform: 'uppercase',
+  },
+  proBadge: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#43a047',
+    marginBottom: 12,
   },
   colorGrid: {
     flexDirection: 'row',

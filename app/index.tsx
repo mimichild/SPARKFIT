@@ -6,6 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useSettingsStore } from '@/stores/settingsStore';
+import { AdBanner } from '@/components/AdBanner';
 
 const APP_DOWNLOAD_URLS: Record<string, string> = {
   sparkplate: 'https://drive.google.com/file/d/1_sbu3LG46hKvYkWJjPbFPii0_V4b4dJd/view?usp=drive_link',
@@ -93,6 +94,8 @@ export default function WelcomeScreen() {
           <Text style={styles.startBtnText}>開始使用</Text>
         </TouchableOpacity>
       </View>
+
+      <AdBanner />
     </SafeAreaView>
   );
 }

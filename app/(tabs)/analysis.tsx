@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useMeasurements, type Measurement } from '@/hooks/useMeasurements';
+import { useProGate } from '@/hooks/useProGate';
 import { Colors } from '@/constants/colors';
 
 // ── Types ─────────────────────────────────────────────────────────
@@ -335,6 +336,7 @@ const ALL_TYPES: BodyType[] = ['沙漏型', '梨型', '蘋果型', '倒三角型
 export default function AnalysisScreen() {
   const themeColor = useSettingsStore(s => s.themeColor);
   const shoulderWidth = useSettingsStore(s => s.shoulderWidth);
+  const { isProUnlocked, requirePro } = useProGate();
 
   const { getLatestMeasurement } = useMeasurements();
   const [latest, setLatest] = useState<Measurement | null>(null);
@@ -346,6 +348,27 @@ export default function AnalysisScreen() {
       getLatestMeasurement().then(m => { setLatest(m); setLoaded(true); });
     }, [getLatestMeasurement]),
   );
+
+  // 分頁仍顯示在分頁列，但點進去是升級提示畫面，不是整個分頁消失
+  if (!isProUnlocked) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar style="dark" />
+        <View style={styles.lockedContainer}>
+          <Ionicons name="lock-closed-outline" size={48} color={Colors.border} />
+          <Text style={styles.lockedTitle}>分析頁為 Pro 專屬功能</Text>
+          <Text style={styles.lockedDesc}>升級 Pro 即可解鎖體型分析與穿搭建議</Text>
+          <TouchableOpacity
+            onPress={() => requirePro('分析頁')}
+            style={[styles.lockedBtn, { backgroundColor: themeColor }]}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.lockedBtnText}>升級 Pro</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   const canAnalyze = !!(latest?.chest && latest?.waist && latest?.hip);
 
@@ -457,6 +480,19 @@ export default function AnalysisScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   scroll: { paddingHorizontal: 20, paddingTop: 12 },
+
+  // Locked (Pro gate)
+  lockedContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 40,
+    gap: 8,
+  },
+  lockedTitle: { fontSize: 17, fontWeight: '700', color: Colors.textPrimary, marginTop: 12 },
+  lockedDesc: { fontSize: 13, color: Colors.textSecondary, textAlign: 'center', marginBottom: 16 },
+  lockedBtn: { paddingHorizontal: 28, paddingVertical: 14, borderRadius: 14 },
+  lockedBtnText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
 
   appTitle: { fontSize: 22, fontWeight: '800', letterSpacing: 2 },
   pageTitle: { fontSize: 15, color: Colors.textSecondary, marginTop: 2, marginBottom: 20 },

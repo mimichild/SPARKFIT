@@ -12,11 +12,13 @@ interface SettingsState {
   height: number | null;
   shoulderWidth: number | null;
   targetWeight: number | null;
+  isProUnlocked: boolean;
   setTheme: (theme: Theme) => void;
   setThemeColor: (color: string) => void;
   setHeight: (h: number | null) => void;
   setShoulderWidth: (w: number | null) => void;
   setTargetWeight: (w: number | null) => void;
+  setProUnlocked: (v: boolean) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -27,11 +29,13 @@ export const useSettingsStore = create<SettingsState>()(
       height: null,
       shoulderWidth: null,
       targetWeight: null,
+      isProUnlocked: false,
       setTheme: (theme) => set({ theme }),
       setThemeColor: (themeColor) => set({ themeColor }),
       setHeight: (height) => set({ height }),
       setShoulderWidth: (shoulderWidth) => set({ shoulderWidth }),
       setTargetWeight: (targetWeight) => set({ targetWeight }),
+      setProUnlocked: (isProUnlocked) => set({ isProUnlocked }),
     }),
     {
       name: STORAGE_KEYS.SETTINGS,
