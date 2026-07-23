@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  TextInput, StyleSheet, KeyboardAvoidingView, Platform,
+  TextInput, StyleSheet, KeyboardAvoidingView, Platform, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useMeasurements, type Measurement } from '@/hooks/useMeasurements';
@@ -72,7 +73,7 @@ export default function AddDataScreen() {
   const setShoulderWidth = useSettingsStore(s => s.setShoulderWidth);
   const setTargetWeight = useSettingsStore(s => s.setTargetWeight);
 
-  const { getMeasurement, saveMeasurement } = useMeasurements();
+  const { getMeasurement, saveMeasurement, deleteMeasurement } = useMeasurements();
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
   const [hiddenFields, setHiddenFields] = useState<HiddenFields>(EMPTY_HIDDEN_FIELDS);
 
@@ -154,6 +155,24 @@ export default function AddDataScreen() {
     router.back();
   };
 
+  const handleDelete = () => {
+    Alert.alert(
+      '刪除這天的紀錄',
+      '刪除後無法復原，確定要刪除嗎？',
+      [
+        { text: '取消', style: 'cancel' },
+        {
+          text: '刪除',
+          style: 'destructive',
+          onPress: async () => {
+            await deleteMeasurement(date);
+            router.back();
+          },
+        },
+      ],
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
@@ -165,9 +184,16 @@ export default function AddDataScreen() {
             <Text style={styles.headerCancel}>取消</Text>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{mode === 'edit' ? '修改數據' : '新增數據'}</Text>
-          <TouchableOpacity onPress={handleSave} hitSlop={12}>
-            <Text style={[styles.headerSave, { color: themeColor }]}>儲存</Text>
-          </TouchableOpacity>
+          <View style={styles.headerRight}>
+            {mode === 'edit' && (
+              <TouchableOpacity onPress={handleDelete} hitSlop={12} testID="delete-btn">
+                <Ionicons name="trash-outline" size={20} color="#FF6B8A" />
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity onPress={handleSave} hitSlop={12}>
+              <Text style={[styles.headerSave, { color: themeColor }]}>儲存</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <ScrollView
@@ -270,6 +296,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#999999',
     minWidth: 36,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
   },
   headerTitle: {
     fontSize: 16,

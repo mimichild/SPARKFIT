@@ -8,12 +8,27 @@
 
 - 儲存庫根目錄：/Users/mimi/Documents/SPARKFIT
 - 標準啟動路徑：`RUN_START_COMMAND=1 ./init.sh`（實際指令見 init.sh 的 START_CMD）
-- 標準驗證路徑：./init.sh（pnpm install + pnpm test；2026-07-23 為 23 tests passed；另有 pnpm typecheck）
+- 標準驗證路徑：./init.sh（pnpm install + pnpm test；2026-07-23 為 24 tests passed；另有 pnpm typecheck）
 - 目前最高優先級未完成功能：無（feature_list.json 目前全部 passing）
 - 目前 blocker：無
-- 背景：Apple Developer Program 已生效（2026-07-20）；ios-001～ios-008、test-001 皆已 passing；App icon 加了描邊解決對比度偏軟問題並實機確認；已設定 EAS Update（OTA）支援；eas.json 補上 appVersionSource remote／autoIncrement／ascAppId；報告頁日期選擇器統一成跟數據頁一樣的月曆樣式；修好「清空紀錄仍在月曆顯示紅點」的資料查詢 bug（getMeasurement/getMeasurements 補上 HAS_DATA_CONDITION 過濾）
+- 背景：Apple Developer Program 已生效（2026-07-20）；ios-001～ios-009、test-001 皆已 passing；App icon 加了描邊解決對比度偏軟問題並實機確認；已設定 EAS Update（OTA）支援；eas.json 補上 appVersionSource remote／autoIncrement／ascAppId；報告頁日期選擇器統一成跟數據頁一樣的月曆樣式；修好「清空紀錄仍在月曆顯示紅點」的資料查詢 bug；新增真正的刪除單日紀錄功能（垃圾桶圖示＋二次確認，iOS/Android 共用）
 
 ## 工作階段日誌
+
+### 工作階段 011
+
+- 日期：2026-07-23
+- 本輪目標：新增刪除單日紀錄功能（跟使用者討論「清空欄位」跟「真正刪除」的差異後決定要加）
+- 已完成：
+  - `src/hooks/useMeasurements.ts` 新增 `deleteMeasurement(date)`，真正的 SQL DELETE（不是清空後 UPDATE）
+  - `app/add-data.tsx` 編輯模式（`mode === 'edit'`）的 header 加垃圾桶圖示（Ionicons `trash-outline`），點下去用 `Alert.alert` 二次確認（destructive 樣式），確認後刪除並返回上一頁
+  - 跨平台通用，iOS/Android 共用同一份程式碼，沒有平台分支
+  - 模擬器實測：垃圾桶圖示正常顯示、確認對話框正常跳出、刪除後資料真的消失且月曆無紅點
+- 執行過的驗證：`pnpm test`（24 tests passed，新增 1 個測試）、`tsc --noEmit`、模擬器手動操作
+- 已擷取證據：見 feature_list.json ios-009 evidence
+- 提交記錄：（本輪 commit）
+- 已知風險或未解決問題：無
+- 下一步最佳動作：feature_list.json 全部 passing；接著要出一版新 APK 給使用者測試；長期主線是回到「先在 SPARKWEAR 接 AdMob+RevenueCat 當範本」的付費功能
 
 ### 工作階段 010
 

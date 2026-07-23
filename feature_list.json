@@ -165,6 +165,25 @@
         "2026-07-23 | sqlite3 直接對模擬器容器內 sparkfit.db 插入 INSERT OR REPLACE INTO measurements (date) VALUES ('2026-07-19')（只有日期、其餘全部 null，模擬「清空後」的殘留紀錄）| 修復前會被月曆標記紅點；修復後重新打開月曆，使用者確認「沒有紅點」，重現並驗證修復成功"
       ],
       "notes": "根因：src/hooks/useMeasurements.ts 的 getMeasurements()（月曆紅點查詢，被 DataCalendarModal.loadMarkedDays 呼叫）用 `SELECT * FROM measurements WHERE date >= ? AND date <= ?`，沒有排除「所有欄位皆為 null」的空紀錄；getLatestMeasurement() 已經有一個 HAS_DATA_CONDITION 常數在做這件事，但 getMeasurement()／getMeasurements() 這兩個查詢當初沒有套用，是遺漏而非設計如此。修法：getMeasurement() 與 getMeasurements() 的 SQL 都加上 `AND ${HAS_DATA_CONDITION}`，讓「一筆紀錄」的定義在整個 hook 裡保持一致（至少有一個欄位有值才算數）。這個 App 目前沒有真正的刪除功能，唯一移除資料的方式就是把所有欄位清空存檔（INSERT OR REPLACE 留下一筆全空的列），修復後這類列會被所有查詢正確忽略，不需要額外的資料庫清理／遷移。"
+    },
+    {
+      "id": "ios-009",
+      "priority": 9,
+      "area": "data",
+      "title": "新增刪除單日紀錄功能",
+      "user_visible_behavior": "使用者編輯某一天的紀錄時，右上角有一個垃圾桶圖示，點下去跳出確認對話框，確認後這天的紀錄會被真正刪除（不是清空欄位），回到數據頁/月曆該天不再顯示有資料。",
+      "status": "passing",
+      "verification": [
+        "pnpm test 全部通過（含新增測試）。",
+        "npx tsc --noEmit 確認型別正確。",
+        "模擬器：編輯畫面出現垃圾桶圖示，點下去有確認對話框，確認後資料真的消失、月曆無紅點。"
+      ],
+      "evidence": [
+        "2026-07-23 | pnpm test | 24 tests passed（新增 1 個測試案例）",
+        "2026-07-23 | npx tsc --noEmit | 無錯誤",
+        "2026-07-23 | 模擬器操作：編輯畫面點垃圾桶 → 確認刪除 | 使用者確認「Ok沒問題了」"
+      ],
+      "notes": "跟使用者討論後決定新增真正的刪除功能（先前只能透過清空所有欄位再存檔，效果上等同但操作麻煩、且會在資料庫留下空紀錄）。實作：src/hooks/useMeasurements.ts 新增 deleteMeasurement(date)（真正的 SQL DELETE，不是清空 UPDATE）；app/add-data.tsx 在 mode==='edit' 時於 header 顯示垃圾桶圖示（Ionicons trash-outline），點下去用 Alert.alert 二次確認（destructive 樣式），確認後呼叫 deleteMeasurement 並 router.back()。跨平台通用（iOS/Android 共用同一份程式碼，沒有平台分支）。"
     }
   ]
 }
