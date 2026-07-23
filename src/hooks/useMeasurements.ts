@@ -88,5 +88,12 @@ export function useMeasurements() {
     return result ?? null;
   }, [db]);
 
-  return { getMeasurement, getMeasurements, getLatestMeasurement, saveMeasurement };
+  const deleteMeasurement = useCallback(
+    async (date: string): Promise<void> => {
+      await db.runAsync('DELETE FROM measurements WHERE date = ?', [date]);
+    },
+    [db],
+  );
+
+  return { getMeasurement, getMeasurements, getLatestMeasurement, saveMeasurement, deleteMeasurement };
 }

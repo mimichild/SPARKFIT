@@ -143,4 +143,17 @@ describe('useMeasurements', () => {
       expect(got).toBeNull();
     });
   });
+
+  describe('deleteMeasurement', () => {
+    it('runs a DELETE for the given date', async () => {
+      const { result } = renderHook(() => useMeasurements());
+
+      await result.current.deleteMeasurement('2026-07-15');
+
+      expect(mockDb.runAsync).toHaveBeenCalledWith(
+        'DELETE FROM measurements WHERE date = ?',
+        ['2026-07-15'],
+      );
+    });
+  });
 });
