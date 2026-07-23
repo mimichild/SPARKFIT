@@ -68,6 +68,13 @@
         {
           "photosPermission": "SPARKFIT 需要相簿存取權限以選取照片"
         }
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-3940256099942544~3347511713",
+          "iosAppId": "ca-app-pub-3940256099942544~1458002511"
+        }
       ]
     ],
     "extra": {

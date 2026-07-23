@@ -42,6 +42,8 @@
     "react-native-calendars": "^1.1314.0",
     "react-native-chart-kit": "^6.12.3",
     "react-native-gesture-handler": "~2.28.0",
+    "react-native-google-mobile-ads": "16.3.4",
+    "react-native-purchases": "^10.4.4",
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
@@ -64,7 +66,9 @@
       "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@shopify/flash-list|zustand|fflate)"
     ],
     "moduleNameMapper": {
-      "^@/(.*)$": "<rootDir>/src/$1"
+      "^@/(.*)$": "<rootDir>/src/$1",
+      "^react-native-purchases$": "<rootDir>/__mocks__/react-native-purchases.ts",
+      "^react-native-google-mobile-ads$": "<rootDir>/__mocks__/react-native-google-mobile-ads.ts"
     }
   }
 }

@@ -8,12 +8,32 @@
 
 - 儲存庫根目錄：/Users/mimi/Documents/SPARKFIT
 - 標準啟動路徑：`RUN_START_COMMAND=1 ./init.sh`（實際指令見 init.sh 的 START_CMD）
-- 標準驗證路徑：./init.sh（pnpm install + pnpm test；2026-07-23 為 24 tests passed；另有 pnpm typecheck）
-- 目前最高優先級未完成功能：無（feature_list.json 目前全部 passing）
+- 標準驗證路徑：./init.sh（pnpm install + pnpm test；2026-07-23 為 41 tests passed；另有 pnpm typecheck）
+- 目前最高優先級未完成功能：monetization-001（in_progress）——AdMob＋RevenueCat＋Pro 功能鎖，複製自 SPARKWEAR/SPARKPLATE/SPARKSHAPE 範本；build/tsc/單元測試都過，這次模擬器上因為廣告版位尺寸關係一直點不準「設定」入口，個別鎖點還沒實際驗證過，待使用者測一輪
 - 目前 blocker：無
 - 背景：Apple Developer Program 已生效（2026-07-20）；ios-001～ios-009、test-001 皆已 passing；App icon 加了描邊解決對比度偏軟問題並實機確認；已設定 EAS Update（OTA）支援；eas.json 補上 appVersionSource remote／autoIncrement／ascAppId；報告頁日期選擇器統一成跟數據頁一樣的月曆樣式；修好「清空紀錄仍在月曆顯示紅點」的資料查詢 bug；新增真正的刪除單日紀錄功能（垃圾桶圖示＋二次確認，iOS/Android 共用）
 
 ## 工作階段日誌
+
+### 工作階段 012
+
+- 日期：2026-07-23
+- 本輪目標：複製 SPARKWEAR/SPARKPLATE/SPARKSHAPE 的付費功能範本到 SPARKFIT（monetization-001）
+- 已完成：
+  - 安裝 `react-native-google-mobile-ads`（鎖定 16.3.4）與 `react-native-purchases`
+  - 新增 `src/constants/monetization.ts`、`src/services/purchases.ts`、`src/hooks/useIsPro.ts`、`src/hooks/useProGate.ts`、`src/components/AdBanner.tsx`
+  - `settingsStore.ts`（zustand persist middleware）加 `isProUnlocked`/`setProUnlocked`
+  - 這個 App 有獨立的 `app/settings.tsx` 路由（不是 Modal），升級提示直接 `router.push('/settings')`，接上主題色/匯出/匯入的 `requirePro` 鎖，加 PRO 解鎖區塊（升級 Pro／恢復購買）
+  - `app/(tabs)/analysis.tsx`（分析頁）用「所有 hooks 呼叫完之後、其餘邏輯之前 return 鎖定畫面」的寫法達成「分頁仍顯示但點進去是升級提示」
+  - 廣告放置：首頁、三個分頁（掛在 `app/(tabs)/_layout.tsx` 共用一條，分頁列原本手動加的 `paddingBottom:24` 改成 `paddingBottom:6`）
+  - 這個專案的 `settingsStore.test.ts` 原本就有 inline `jest.mock('@react-native-async-storage/async-storage', ...)`，新測試檔跟著加一樣的 mock 才能過
+  - 新增對應單元測試，41 tests 全過；`npx tsc --noEmit -p .` 完全無錯誤
+  - `npx expo prebuild --platform ios && pod install` 成功；`npx expo run:ios` 建置成功並在模擬器實測：首頁看得到 AdMob 測試廣告（誤觸後正確開啟 Safari 到 AdMob 官網，證實廣告是真的有載入渲染的可點擊單元，不是空殼）
+- 執行過的驗證：`./init.sh`（41 tests passed）、`npx tsc --noEmit -p .`（無錯誤）、模擬器手動操作（僅確認首頁與廣告；進入設定頁測試個別鎖點時因為廣告版位尺寸關係一直點不準座標，沒能完成）
+- 已擷取證據：見 feature_list.json monetization-001 evidence
+- 提交記錄：（見本輪 commit）
+- 已知風險或未解決問題：個別鎖點（主題色/匯出/匯入的升級提示、分析頁鎖定畫面、恢復購買、Android 全功能開放、三個分頁的廣告位置）都還沒實際點過確認，只有單元測試佐證（測的是同一個 requirePro 函式，跟其他三個 App 已經人工驗證過的邏輯完全相同）
+- 下一步最佳動作：使用者有空時自己測一輪 → monetization-001 改 passing；接著複製到 SPARKLOG（5 個 App 的最後一個）
 
 ### 工作階段 011
 
