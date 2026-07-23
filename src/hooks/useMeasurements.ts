@@ -38,7 +38,7 @@ export function useMeasurements() {
   const getMeasurement = useCallback(
     async (date: string): Promise<Measurement | null> => {
       const result = await db.getFirstAsync<Measurement>(
-        'SELECT * FROM measurements WHERE date = ?',
+        `SELECT * FROM measurements WHERE date = ? AND ${HAS_DATA_CONDITION}`,
         [date],
       );
       return result ?? null;
@@ -68,7 +68,7 @@ export function useMeasurements() {
   const getMeasurements = useCallback(
     async (startDate: string, endDate: string): Promise<Measurement[]> => {
       const results = await db.getAllAsync<Measurement>(
-        'SELECT * FROM measurements WHERE date >= ? AND date <= ? ORDER BY date ASC',
+        `SELECT * FROM measurements WHERE date >= ? AND date <= ? AND ${HAS_DATA_CONDITION} ORDER BY date ASC`,
         [startDate, endDate],
       );
       return results;

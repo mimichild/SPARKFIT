@@ -8,12 +8,27 @@
 
 - 儲存庫根目錄：/Users/mimi/Documents/SPARKFIT
 - 標準啟動路徑：`RUN_START_COMMAND=1 ./init.sh`（實際指令見 init.sh 的 START_CMD）
-- 標準驗證路徑：./init.sh（pnpm install + pnpm test；2026-07-22 為 21 tests passed；另有 pnpm typecheck）
+- 標準驗證路徑：./init.sh（pnpm install + pnpm test；2026-07-23 為 23 tests passed；另有 pnpm typecheck）
 - 目前最高優先級未完成功能：無（feature_list.json 目前全部 passing）
 - 目前 blocker：無
-- 背景：Apple Developer Program 已生效（2026-07-20）；ios-001～ios-006、test-001 皆已 passing（含 TestFlight 實機驗證）；App icon 加了描邊解決對比度偏軟問題並實機確認（跟 SPARKPLATE 同款風格）；已設定 EAS Update（OTA）支援；eas.json 補上 appVersionSource remote／autoIncrement／ascAppId（這個專案原本完全沒設定，這次一次補齊）
+- 背景：Apple Developer Program 已生效（2026-07-20）；ios-001～ios-008、test-001 皆已 passing；App icon 加了描邊解決對比度偏軟問題並實機確認；已設定 EAS Update（OTA）支援；eas.json 補上 appVersionSource remote／autoIncrement／ascAppId；報告頁日期選擇器統一成跟數據頁一樣的月曆樣式；修好「清空紀錄仍在月曆顯示紅點」的資料查詢 bug（getMeasurement/getMeasurements 補上 HAS_DATA_CONDITION 過濾）
 
 ## 工作階段日誌
+
+### 工作階段 010
+
+- 日期：2026-07-23
+- 本輪目標：(1) 報告頁日期選擇器改成跟數據頁一致的月曆樣式；(2) 使用者回報並順手修好「清空紀錄仍顯示紅點」的 bug
+- 已完成：
+  - `app/(tabs)/report.tsx` 的三個日期按鈕（單日、區間開始、區間結束）從 `@react-native-community/datetimepicker` 滾輪式選擇器改成複用既有的 `DataCalendarModal` 元件，移除相關的 Platform 分支與 pickerSheet 系列樣式
+  - 過程中本機 Android 建置（幫使用者出一版 APK 測試）踩到 Gradle Metaspace OOM（`:expo-updates:kspReleaseKotlin` 失敗），把 `android/gradle.properties` 的 `MaxMetaspaceSize` 從 512m 加大到 1024m 解決，這是 expo-updates 這次新增的 KSP 註解處理需要更多記憶體
+  - 使用者實機/模擬器測試時發現：7/15、7/16 之前清空過的測試資料，月曆上仍顯示紅點，點進去卻是空的。查出根因：`src/hooks/useMeasurements.ts` 的 `getMeasurement()`／`getMeasurements()` 沒有套用既有的 `HAS_DATA_CONDITION`（用來判斷「這筆紀錄是否真的有資料」），導致「清空後留下的全 null 列」被當成有效紀錄查出來。兩個函式的 SQL 都補上這個條件，讓整個 hook 對「一筆紀錄」的定義保持一致
+  - 用 sqlite3 直接插入一筆模擬情境的空紀錄重現 bug，確認修復後月曆正確不再顯示該日期的紅點
+- 執行過的驗證：`pnpm test`（23 tests passed，含新增 2 個測試）、`tsc --noEmit`、模擬器手動操作、sqlite3 直接重現與驗證
+- 已擷取證據：見 feature_list.json ios-007／ios-008 evidence
+- 提交記錄：（本輪 commit）
+- 已知風險或未解決問題：無
+- 下一步最佳動作：feature_list.json 全部 passing，無待辦項目；下一步是回到「先在 SPARKWEAR 接 AdMob+RevenueCat 當範本」的付費功能主線
 
 ### 工作階段 009
 

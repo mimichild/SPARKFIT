@@ -129,6 +129,42 @@
         "2026-07-22 | eas build + eas submit（Build 2，修好上述兩個問題後）→ App Store Connect 加入內部測試群組 → iPhone TestFlight 安裝 | 使用者實機確認「現在看起來都正常了」"
       ],
       "notes": "2026-07-21 查證：assets/images/icon.png 是 1024x1024、圓形邊緣反鋸齒 1-2px、文字筆畫邊緣也是正常銳利，沒有發現解析度不足或檔案本身失焦的技術性瑕疵，png color_type 是 Truecolor（無 alpha）。也確認過沒有 SPARKSHAPE 那種背景棋盤格殘留問題，是乾淨的檔案。2026-07-22 跟使用者確認方向後加了描邊解決對比度問題。Android 的 adaptiveIcon 用的是另一張獨立檔案（assets/images/adaptive-icon.png），使用者反映的是 iPhone 桌面圖示，這次沒有動 Android 那張，範圍以外。實際出貨到 TestFlight 時踩到兩個環境坑（見上方 evidence）：ImageMagick 加描邊的 draw 指令意外產生 alpha 通道被 Apple 拒絕；eas.json 一直沒設定 appVersionSource/autoIncrement，導致 build number 長期卡在 1（這其實是這個專案從一開始就存在的設定缺口，之前沒發現是因為沒有重複 build 過同一個 App Version）。"
+    },
+    {
+      "id": "ios-007",
+      "priority": 7,
+      "area": "ui",
+      "title": "報告頁單日/區間日期選擇器改成跟數據頁一致的月曆樣式",
+      "user_visible_behavior": "報告頁「單日查看」與「區間折線圖」的三個日期按鈕（單日、開始、結束），點下去彈出的月曆長得跟數據頁左上角日期按鈕的月曆一樣（粉紅底年月日大標題＋月曆網格，取消/確定按鈕在底部），不再是 iOS 原生的滾輪式選擇器。",
+      "status": "passing",
+      "verification": [
+        "pnpm test 全部通過。",
+        "模擬器：報告頁三個日期按鈕點下去都跳出跟數據頁一樣樣式的月曆（不是滾輪）。",
+        "npx tsc --noEmit 確認型別正確、無殘留未使用的 import。"
+      ],
+      "evidence": [
+        "2026-07-23 | pnpm test | 21 tests passed",
+        "2026-07-23 | npx tsc --noEmit | 無錯誤",
+        "2026-07-23 | 模擬器操作：報告頁單日/區間日期按鈕 | 使用者確認跳出的月曆樣式跟數據頁一致"
+      ],
+      "notes": "app/(tabs)/report.tsx 原本用 @react-native-community/datetimepicker 的 spinner 樣式（iOS）／default 樣式（Android），跟 app/(tabs)/index.tsx 用的 src/components/DataCalendarModal.tsx（react-native-calendars 月曆網格）視覺不一致。使用者確認三個日期按鈕（單日、區間開始、區間結束）都要一起改，不是只改單日那個。直接複用既有的 DataCalendarModal 元件（原本就設計成可重用），移除 report.tsx 裡的 DateTimePicker/Platform 相關程式碼與對應的 pickerSheet 系列樣式。"
+    },
+    {
+      "id": "ios-008",
+      "priority": 8,
+      "area": "data",
+      "title": "已清空的紀錄仍會在月曆上顯示紅點，點進去卻是空的",
+      "user_visible_behavior": "使用者在某天新增資料後又清空所有欄位存檔（App 沒有真正的刪除功能，「清空」是唯一移除資料的方式），該天在月曆上仍然顯示有紀錄的紅點，但點進去該天卻顯示「尚無記錄」，紅點跟實際內容不一致。",
+      "status": "passing",
+      "verification": [
+        "pnpm test 全部通過（含新增測試案例）。",
+        "模擬器＋sqlite3：手動在資料庫插入一筆「日期存在但所有欄位皆為 null」的紀錄，確認月曆不再顯示該日期的紅點。"
+      ],
+      "evidence": [
+        "2026-07-23 | pnpm test | 23 tests passed（新增 2 個測試案例）",
+        "2026-07-23 | sqlite3 直接對模擬器容器內 sparkfit.db 插入 INSERT OR REPLACE INTO measurements (date) VALUES ('2026-07-19')（只有日期、其餘全部 null，模擬「清空後」的殘留紀錄）| 修復前會被月曆標記紅點；修復後重新打開月曆，使用者確認「沒有紅點」，重現並驗證修復成功"
+      ],
+      "notes": "根因：src/hooks/useMeasurements.ts 的 getMeasurements()（月曆紅點查詢，被 DataCalendarModal.loadMarkedDays 呼叫）用 `SELECT * FROM measurements WHERE date >= ? AND date <= ?`，沒有排除「所有欄位皆為 null」的空紀錄；getLatestMeasurement() 已經有一個 HAS_DATA_CONDITION 常數在做這件事，但 getMeasurement()／getMeasurements() 這兩個查詢當初沒有套用，是遺漏而非設計如此。修法：getMeasurement() 與 getMeasurements() 的 SQL 都加上 `AND ${HAS_DATA_CONDITION}`，讓「一筆紀錄」的定義在整個 hook 裡保持一致（至少有一個欄位有值才算數）。這個 App 目前沒有真正的刪除功能，唯一移除資料的方式就是把所有欄位清空存檔（INSERT OR REPLACE 留下一筆全空的列），修復後這類列會被所有查詢正確忽略，不需要額外的資料庫清理／遷移。"
     }
   ]
 }

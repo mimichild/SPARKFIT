@@ -34,7 +34,7 @@ describe('useMeasurements', () => {
       const got = await result.current.getMeasurement('2026-07-20');
 
       expect(mockDb.getFirstAsync).toHaveBeenCalledWith(
-        'SELECT * FROM measurements WHERE date = ?',
+        expect.stringMatching(/^SELECT \* FROM measurements WHERE date = \? AND \(/),
         ['2026-07-20'],
       );
       expect(got).toEqual(row);
@@ -45,6 +45,18 @@ describe('useMeasurements', () => {
       const { result } = renderHook(() => useMeasurements());
 
       const got = await result.current.getMeasurement('2026-07-20');
+
+      expect(got).toBeNull();
+    });
+
+    it('returns null for a row where every field was cleared back to null', async () => {
+      // The app has no real delete — "removing" a record means saving it with
+      // every field blank, which leaves a date-only row behind. The SQL filter
+      // (HAS_DATA_CONDITION) should exclude it, same as a missing row.
+      mockDb.getFirstAsync.mockResolvedValue(undefined);
+      const { result } = renderHook(() => useMeasurements());
+
+      const got = await result.current.getMeasurement('2026-07-15');
 
       expect(got).toBeNull();
     });
@@ -78,10 +90,21 @@ describe('useMeasurements', () => {
       const got = await result.current.getMeasurements('2026-07-01', '2026-07-31');
 
       expect(mockDb.getAllAsync).toHaveBeenCalledWith(
-        'SELECT * FROM measurements WHERE date >= ? AND date <= ? ORDER BY date ASC',
+        expect.stringMatching(/^SELECT \* FROM measurements WHERE date >= \? AND date <= \? AND \(.*\) ORDER BY date ASC$/s),
         ['2026-07-01', '2026-07-31'],
       );
       expect(got).toEqual(rows);
+    });
+
+    it('excludes rows with no real data (all fields null) even if the date row exists', async () => {
+      mockDb.getAllAsync.mockResolvedValue([]);
+      const { result } = renderHook(() => useMeasurements());
+
+      const got = await result.current.getMeasurements('2026-07-01', '2026-07-31');
+
+      // The filtering itself happens in SQL (HAS_DATA_CONDITION); here we just
+      // confirm the hook passes through whatever the (correctly filtered) query returns.
+      expect(got).toEqual([]);
     });
   });
 
