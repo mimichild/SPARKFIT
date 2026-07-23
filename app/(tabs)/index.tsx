@@ -68,7 +68,7 @@ export default function DataScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <StatusBar style="dark" />
       <ScrollView
         contentContainerStyle={styles.scrollContent}

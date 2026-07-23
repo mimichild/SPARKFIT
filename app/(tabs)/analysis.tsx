@@ -352,7 +352,7 @@ export default function AnalysisScreen() {
   // 分頁仍顯示在分頁列，但點進去是升級提示畫面，不是整個分頁消失
   if (!isProUnlocked) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
         <StatusBar style="dark" />
         <View style={styles.lockedContainer}>
           <Ionicons name="lock-closed-outline" size={48} color={Colors.border} />
@@ -381,7 +381,7 @@ export default function AnalysisScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
