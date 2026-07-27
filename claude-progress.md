@@ -9,12 +9,21 @@
 - 儲存庫根目錄：/Users/mimi/Documents/SPARKFIT
 - 標準啟動路徑：`RUN_START_COMMAND=1 ./init.sh`（實際指令見 init.sh 的 START_CMD）
 - 標準驗證路徑：./init.sh（pnpm install + pnpm test；2026-07-23 為 41 tests passed；另有 pnpm typecheck）
-- monetization-001：passing；AdMob 真實 ID 已設定；**RevenueCat 已完整設定並拿到正式 Public API Key**（`appl_fvCFOIjBVapijlCwfWBVVWUYtty`，已寫入程式碼）；待辦：跑一次原生 build 讓所有改動生效，之後實機測真實購買流程
+- monetization-001：passing；AdMob／RevenueCat 已設定並已實機 build 安裝成功；購買流程實測時遇到 RevenueCat 官方已知事故（詳見 monetization_spec_5_apps 記憶），待事故排除後重測
 - 目前最高優先級未完成功能：無（下一輪從 feature_list.json 選下一個 not_started 功能）
-- 目前 blocker：無
+- 目前 blocker：RevenueCat 購買測試卡在官方事故（非本專案問題），等對方修復
 - 背景：Apple Developer Program 已生效（2026-07-20）；ios-001～ios-009、test-001 皆已 passing；App icon 加了描邊解決對比度偏軟問題並實機確認；已設定 EAS Update（OTA）支援；eas.json 補上 appVersionSource remote／autoIncrement／ascAppId；報告頁日期選擇器統一成跟數據頁一樣的月曆樣式；修好「清空紀錄仍在月曆顯示紅點」的資料查詢 bug；新增真正的刪除單日紀錄功能（垃圾桶圖示＋二次確認，iOS/Android 共用）
 
 ## 工作階段日誌
+
+### 工作階段 018
+
+- 日期：2026-07-27
+- 本輪目標：實機建置驗證 AdMob／RevenueCat
+- 已完成：`npx expo run:ios --device` 成功建置並安裝到實機，App 正常開啟
+- 執行過的驗證：實機互動測試——點「升級 Pro」出現 `升級失敗：None of the products registered in the RevenueCat dashboard could be fetched from App Store Connect`，排查 Bundle ID／App Store Connect 商品狀態／RevenueCat 設定皆正確，判定是 RevenueCat 官方已知事故造成（同一輪其他 3 個非 SPARKWEAR 的 App 也是同樣錯誤）
+- 已知風險或未解決問題：購買流程尚未驗證成功
+- 下一步最佳動作：等 RevenueCat 網站上方事故提示消失後，直接開已裝好的 App 重測「升級 Pro」，不用重新 build
 
 ### 工作階段 017
 
