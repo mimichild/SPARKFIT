@@ -9,12 +9,24 @@
 - 儲存庫根目錄：/Users/mimi/Documents/SPARKFIT
 - 標準啟動路徑：`RUN_START_COMMAND=1 ./init.sh`（實際指令見 init.sh 的 START_CMD）
 - 標準驗證路徑：./init.sh（pnpm install + pnpm test；2026-07-23 為 41 tests passed；另有 pnpm typecheck）
-- monetization-001：passing；AdMob／RevenueCat 已設定並已實機 build 安裝成功；購買流程實測時遇到 RevenueCat 官方已知事故（詳見 monetization_spec_5_apps 記憶），待事故排除後重測
+- monetization-001：passing；AdMob／RevenueCat 已設定並**已實機驗證購買成功**（RevenueCat 官方事故已於 7/31 解決）；順帶修好 `useProGate.ts` 一個真實 bug（見工作階段 019）
 - 目前最高優先級未完成功能：無（下一輪從 feature_list.json 選下一個 not_started 功能）
-- 目前 blocker：RevenueCat 購買測試卡在官方事故（非本專案問題），等對方修復
+- 目前 blocker：無
 - 背景：Apple Developer Program 已生效（2026-07-20）；ios-001～ios-009、test-001 皆已 passing；App icon 加了描邊解決對比度偏軟問題並實機確認；已設定 EAS Update（OTA）支援；eas.json 補上 appVersionSource remote／autoIncrement／ascAppId；報告頁日期選擇器統一成跟數據頁一樣的月曆樣式；修好「清空紀錄仍在月曆顯示紅點」的資料查詢 bug；新增真正的刪除單日紀錄功能（垃圾桶圖示＋二次確認，iOS/Android 共用）
 
 ## 工作階段日誌
+
+### 工作階段 019
+
+- 日期：2026-08-01
+- 本輪目標：RevenueCat 官方事故排除後重測，修好順便發現的真實 bug
+- 已完成：
+  - 實機重測「升級 Pro」確認購買流程成功（RevenueCat 事故已解決）
+  - 修正 `useProGate.ts`：「升級 Pro」按鈕從 `router.push('/settings')` 改成直接呼叫 `purchasePro()` 觸發真實購買（跟 SPARKWEAR/SPARKPLATE 同一輪修正，原因是使用者觸發時通常已經身處設定頁，導頁沒有可見效果）
+  - 更新 `src/__tests__/hooks/useProGate.test.ts` 對應新行為
+- 執行過的驗證：`npx tsc --noEmit`（無新增錯誤）；`npx jest`（6 suites、42 tests 全過）；實機互動測試確認修好
+- 已知風險或未解決問題：無
+- 下一步最佳動作：無（monetization-001 全部完成）
 
 ### 工作階段 018
 
