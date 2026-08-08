@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { ScrollView } from 'react-native-gesture-handler';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -386,8 +386,21 @@ export default function AnalysisScreen() {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
         {/* Header */}
-        <Text style={[styles.appTitle, { color: themeColor }]}>SPARKFIT</Text>
-        <Text style={styles.pageTitle}>分析</Text>
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => router.back()}
+            activeOpacity={0.6}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons name="chevron-back" size={26} color={themeColor} />
+          </TouchableOpacity>
+          <View style={styles.headerCenter}>
+            <Text style={[styles.appTitle, { color: themeColor }]}>SPARKFIT</Text>
+            <Text style={styles.pageTitle}>分析</Text>
+          </View>
+          <View style={styles.headerSpacer} />
+        </View>
 
         {/* ── Measurements Card ── */}
         <View style={styles.measureCard}>
@@ -494,6 +507,10 @@ const styles = StyleSheet.create({
   lockedBtn: { paddingHorizontal: 28, paddingVertical: 14, borderRadius: 14 },
   lockedBtnText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
 
+  header: { flexDirection: 'row', alignItems: 'center' },
+  backBtn: { width: 32, alignItems: 'flex-start', justifyContent: 'center' },
+  headerCenter: { flex: 1, alignItems: 'center' },
+  headerSpacer: { width: 32 },
   appTitle: { fontSize: 22, fontWeight: '800', letterSpacing: 2 },
   pageTitle: { fontSize: 15, color: Colors.textSecondary, marginTop: 2, marginBottom: 20 },
 

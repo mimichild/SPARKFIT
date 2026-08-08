@@ -75,10 +75,23 @@ export default function DataScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* ── Header ── */}
-        <Text style={[styles.appTitle, { color: themeColor }]}>SPARKFIT</Text>
-        <TouchableOpacity onPress={openPicker} activeOpacity={0.7}>
-          <Text style={styles.date}>{formatDate(selectedDate)}</Text>
-        </TouchableOpacity>
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => router.back()}
+            activeOpacity={0.6}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons name="chevron-back" size={26} color={themeColor} />
+          </TouchableOpacity>
+          <View style={styles.headerCenter}>
+            <Text style={[styles.appTitle, { color: themeColor }]}>SPARKFIT</Text>
+            <TouchableOpacity onPress={openPicker} activeOpacity={0.7}>
+              <Text style={styles.date}>{formatDate(selectedDate)}</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.headerSpacer} />
+        </View>
 
         {/* ── 體重 Hero ── */}
         <View style={[styles.heroCard, { backgroundColor: themeColor }]}>
@@ -175,6 +188,22 @@ const styles = StyleSheet.create({
   },
 
   // Header
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backBtn: {
+    width: 32,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  headerSpacer: {
+    width: 32,
+  },
   appTitle: {
     fontSize: 22,
     fontWeight: '800',

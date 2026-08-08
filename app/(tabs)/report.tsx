@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { router } from 'expo-router';
 import { ScrollView } from 'react-native-gesture-handler';
 import {
   View, Text, TouchableOpacity,
@@ -7,6 +8,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { LineChart } from 'react-native-chart-kit';
+import { Ionicons } from '@expo/vector-icons';
 
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useMeasurements, type Measurement } from '@/hooks/useMeasurements';
@@ -218,8 +220,21 @@ export default function ReportScreen() {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
         {/* Header */}
-        <Text style={[styles.appTitle, { color: themeColor }]}>SPARKFIT</Text>
-        <Text style={styles.pageTitle}>報告</Text>
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => router.back()}
+            activeOpacity={0.6}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons name="chevron-back" size={26} color={themeColor} />
+          </TouchableOpacity>
+          <View style={styles.headerCenter}>
+            <Text style={[styles.appTitle, { color: themeColor }]}>SPARKFIT</Text>
+            <Text style={styles.pageTitle}>報告</Text>
+          </View>
+          <View style={styles.headerSpacer} />
+        </View>
 
         {/* Mode toggle */}
         <View style={styles.modeRow}>
@@ -407,6 +422,10 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   scroll: { paddingHorizontal: 20, paddingTop: 12 },
 
+  header: { flexDirection: 'row', alignItems: 'center' },
+  backBtn: { width: 32, alignItems: 'flex-start', justifyContent: 'center' },
+  headerCenter: { flex: 1, alignItems: 'center' },
+  headerSpacer: { width: 32 },
   appTitle: { fontSize: 22, fontWeight: '800', letterSpacing: 2 },
   pageTitle: { fontSize: 15, color: Colors.textSecondary, marginTop: 2, marginBottom: 20 },
 
