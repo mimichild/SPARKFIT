@@ -13,8 +13,25 @@
 - 目前最高優先級未完成功能：無（下一輪從 feature_list.json 選下一個 not_started 功能）
 - 目前 blocker：無
 - 背景：Apple Developer Program 已生效（2026-07-20）；ios-001～ios-009、test-001 皆已 passing；App icon 加了描邊解決對比度偏軟問題並實機確認；已設定 EAS Update（OTA）支援；eas.json 補上 appVersionSource remote／autoIncrement／ascAppId；報告頁日期選擇器統一成跟數據頁一樣的月曆樣式；修好「清空紀錄仍在月曆顯示紅點」的資料查詢 bug；新增真正的刪除單日紀錄功能（垃圾桶圖示＋二次確認，iOS/Android 共用）
+- Android release APK 本地建置已知隱患：`android/`（gitignored、由 `expo prebuild` 產生）曾長期未跟著 `app.json` 更新重新生成，導致累積 3 個潛在問題（AdMob meta-data 缺失、splash 缺 image、`softwareKeyboardLayoutMode` 值不合法），已於工作階段 020 全部修掉並改成每次本地建置前先 `rm -rf android && npx expo prebuild --platform android` 再 `assembleRelease`，避免舊 native 專案殘留
 
 ## 工作階段日誌
+
+### 工作階段 020
+
+- 日期：2026-08-08
+- 本輪目標：使用者回報「SPARK FIT 屢次停止動作」，修好 Android 版閃退
+- 已完成：
+  - 用 `adb shell dumpsys dropbox --print` 抓到崩潰堆疊：`MobileAdsInitProvider` 啟動時丟出 `IllegalStateException: Invalid application ID`，是 App 一啟動就 100% 必崩，符合「屢次停止動作」的症狀
+  - 根因：`android/` 是 gitignored、由 `expo prebuild` 產生的本地檔案，最後一次生成是 6/29，早於後續加上的 AdMob config plugin 設定；build-apk skill 的腳本邏輯是「`android/` 已存在就不重跑 prebuild」，導致 AdMob 的 `com.google.android.gms.ads.APPLICATION_ID` meta-data 從未真的寫進 manifest
+  - 執行 `rm -rf android && npx expo prebuild --platform android` 重新生成後，又連續踩到兩個同樣屬於「`android/` 長期未跟 `app.json` 同步」的既有問題，逐一修掉：
+    1. `AndroidManifest.xml` 缺 `windowSoftInputMode` 對應的 drawable：`app.json` 的 `splash` 缺少 `image`（比對 SPARKWEAR/SPARKSHAPE/SPARKPLATE 三個姊妹專案都有設 `image`+`resizeMode`），導致 SDK 54 的 splash 外掛寫了 style 參照但沒真的產生 `splashscreen_logo` drawable。補上 `"image": "./assets/images/splash-icon.png"`、`"resizeMode": "contain"`（素材本來就在 `assets/images/splash-icon.png`，只是沒被引用）
+    2. `app.json` 的 `android.softwareKeyboardLayoutMode` 原值是 `"nothing"`，但 Expo 該欄位型別只接受 `'resize' | 'pan'`，不合法值會被原樣寫進 manifest 造成 AAPT 連結失敗（`'nothing' is incompatible with attribute windowSoftInputMode`）。改成 `"resize"`（Expo 預設值）
+  - 三個問題都修完後 `./gradlew assembleRelease` 建置成功，`adb install -r` 裝到實機（Pixel 10, `58081FDCR0048L`）並 `adb shell am start` 啟動，確認 process 存活、`adb logcat -d -b crash` 無新崩潰紀錄
+  - 新 APK 已複製到 Google Drive：`SPARK-Builds/SPARKFIT/sparkfit-v1.0.0-20260808-1602.apk`
+- 執行過的驗證：`npx tsc --noEmit`（無錯誤）；`npx jest`（6 suites、42 tests 全過）；實機安裝＋啟動＋`adb logcat` 確認無崩潰
+- 已知風險或未解決問題：`android/` 這個生成流程本身仍是隱患來源——只要之後 `app.json` 再改、又剛好走到「`android/` 已存在故跳過 prebuild」的路徑，同類問題可能再發生；目前是靠這輪手動 `rm -rf android` 全新生成才連帶修掉，沒有機制自動偵測 config 與生成的 native 專案是否同步
+- 下一步最佳動作：build-apk skill 腳本可以考慮改成每次都先 `rm -rf android` 再 prebuild（犧牲一點建置時間換取正確性），或至少在 app.json 有修改時提醒需要重新 prebuild；下次工作階段開始時照常從 feature_list.json 選下一個 not_started 功能
 
 ### 工作階段 019
 

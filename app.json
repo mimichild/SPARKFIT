@@ -9,6 +9,8 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
       "backgroundColor": "#FFF9F9"
     },
     "ios": {
@@ -27,7 +29,7 @@
       },
       "package": "com.sparkfit.app",
       "edgeToEdgeEnabled": true,
-      "softwareKeyboardLayoutMode": "nothing",
+      "softwareKeyboardLayoutMode": "resize",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
