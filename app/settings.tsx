@@ -1,15 +1,33 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Platform } from 'react-native';
+import { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Platform, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
+import type { PurchasesPackage } from 'react-native-purchases';
 
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useBackup } from '@/hooks/useBackup';
 import { useProGate } from '@/hooks/useProGate';
 import { AdBanner } from '@/components/AdBanner';
-import { purchasePro, restorePurchases } from '@/services/purchases';
+import { purchasePro, purchasePackage, restorePurchases, fetchPackages } from '@/services/purchases';
+import { PRIVACY_POLICY_URL, TERMS_OF_USE_URL } from '@/constants/monetization';
 import { THEME_COLORS } from '@/constants';
 import { Colors } from '@/constants/colors';
+
+function packagePlanLabel(pkg: PurchasesPackage): string {
+  if (pkg.packageType === 'ANNUAL') return 'SPARK FIT Pro 年費方案';
+  if (pkg.packageType === 'MONTHLY') return 'SPARK FIT Pro 月費方案';
+  return pkg.product.title;
+}
+
+function packagePeriodLabel(pkg: PurchasesPackage): string {
+  if (pkg.packageType === 'ANNUAL') return '訂閱期間：每年自動續訂';
+  if (pkg.packageType === 'MONTHLY') return '訂閱期間：每月自動續訂';
+  const iso = pkg.product.subscriptionPeriod;
+  if (iso === 'P1Y') return '訂閱期間：每年自動續訂';
+  if (iso === 'P1M') return '訂閱期間：每月自動續訂';
+  if (iso === 'P1W') return '訂閱期間：每週自動續訂';
+  return '訂閱期間：自動續訂';
+}
 
 export default function SettingsScreen() {
   const themeColor = useSettingsStore((s) => s.themeColor);
@@ -19,11 +37,40 @@ export default function SettingsScreen() {
   const { isProUnlocked, requirePro } = useProGate();
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const [packages, setPackages] = useState<PurchasesPackage[]>([]);
+  const [loadingPackages, setLoadingPackages] = useState(false);
 
   const { progress, backupStatus, message, exportBackup, importBackup, isRunning } = useBackup();
 
   const progressColor = backupStatus === 'error' ? '#FF6B6B' : themeColor;
   const progressBg = backupStatus === 'error' ? '#FFE0E0' : themeColor + '22';
+
+  // 需要顯示各方案的標題／期間／價格（Apple Guideline 3.1.2(c)），只有 iOS 且
+  // 尚未解鎖 Pro 時才需要載入。
+  useEffect(() => {
+    if (Platform.OS === 'android' || isProUnlocked) return;
+    let cancelled = false;
+    setLoadingPackages(true);
+    fetchPackages()
+      .then((pkgs) => { if (!cancelled) setPackages(pkgs); })
+      .finally(() => { if (!cancelled) setLoadingPackages(false); });
+    return () => { cancelled = true; };
+  }, [isProUnlocked]);
+
+  async function handlePurchasePackage(pkg: PurchasesPackage) {
+    setPurchasing(true);
+    try {
+      const isPro = await purchasePackage(pkg);
+      if (isPro) {
+        setProUnlocked(true);
+        Alert.alert('升級成功', 'Pro 功能已啟用');
+      }
+    } catch (e) {
+      Alert.alert('升級失敗', e instanceof Error ? e.message : '請稍後再試');
+    } finally {
+      setPurchasing(false);
+    }
+  }
 
   async function handlePurchase() {
     setPurchasing(true);
@@ -75,17 +122,52 @@ export default function SettingsScreen() {
           ) : (
             <View style={{ marginBottom: 8 }}>
               <Text style={styles.hintText}>升級 Pro 即可解鎖分析頁、主題色、匯出匯入，並移除廣告</Text>
-              <TouchableOpacity
-                style={[styles.exportBtn, { backgroundColor: themeColor, marginTop: 12 }]}
-                activeOpacity={0.8}
-                onPress={handlePurchase}
-                disabled={purchasing}
-              >
-                <Text style={styles.exportBtnText}>{purchasing ? '處理中…' : '升級 Pro'}</Text>
-              </TouchableOpacity>
+
+              {loadingPackages ? (
+                <Text style={styles.hintText}>載入方案中…</Text>
+              ) : packages.length > 0 ? (
+                packages.map((pkg) => (
+                  <View key={pkg.identifier} style={styles.planRow}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.planTitle}>{packagePlanLabel(pkg)}</Text>
+                      <Text style={styles.planMeta}>{packagePeriodLabel(pkg)}</Text>
+                      <Text style={styles.planMeta}>價格：{pkg.product.priceString}</Text>
+                    </View>
+                    <TouchableOpacity
+                      style={[styles.exportBtn, { backgroundColor: themeColor, marginBottom: 0, height: 44, paddingHorizontal: 18 }]}
+                      activeOpacity={0.8}
+                      onPress={() => handlePurchasePackage(pkg)}
+                      disabled={purchasing}
+                    >
+                      <Text style={styles.exportBtnText}>{purchasing ? '處理中…' : '訂閱'}</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))
+              ) : (
+                <TouchableOpacity
+                  style={[styles.exportBtn, { backgroundColor: themeColor, marginTop: 12 }]}
+                  activeOpacity={0.8}
+                  onPress={handlePurchase}
+                  disabled={purchasing}
+                >
+                  <Text style={styles.exportBtnText}>{purchasing ? '處理中…' : '升級 Pro'}</Text>
+                </TouchableOpacity>
+              )}
+
               <TouchableOpacity onPress={handleRestore} disabled={restoring} activeOpacity={0.7} style={{ alignItems: 'center', paddingVertical: 6 }}>
                 <Text style={{ color: themeColor, fontSize: 13, fontWeight: '600' }}>{restoring ? '還原中…' : '恢復購買'}</Text>
               </TouchableOpacity>
+
+              <View style={styles.legalRow}>
+                <TouchableOpacity onPress={() => Linking.openURL(PRIVACY_POLICY_URL)} hitSlop={8}>
+                  <Text style={styles.legalLink}>隱私權政策</Text>
+                </TouchableOpacity>
+                <Text style={styles.legalDot}>·</Text>
+                <TouchableOpacity onPress={() => Linking.openURL(TERMS_OF_USE_URL)} hitSlop={8}>
+                  <Text style={styles.legalLink}>服務條款</Text>
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.legalHint}>訂閱將自動續訂，可隨時於 App Store 帳號設定中取消</Text>
             </View>
           )}
 
@@ -214,6 +296,49 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#43a047',
     marginBottom: 12,
+  },
+  planRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    gap: 10,
+    marginTop: 8,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#f0f0f0',
+  },
+  planTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+  },
+  planMeta: {
+    fontSize: 12,
+    color: '#888',
+    marginTop: 2,
+  },
+  legalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 12,
+  },
+  legalLink: {
+    fontSize: 12,
+    color: '#666',
+    textDecorationLine: 'underline',
+  },
+  legalDot: {
+    fontSize: 12,
+    color: '#ccc',
+  },
+  legalHint: {
+    fontSize: 11,
+    color: '#aaa',
+    textAlign: 'center',
+    marginTop: 6,
+    lineHeight: 16,
   },
   colorGrid: {
     flexDirection: 'row',
