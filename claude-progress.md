@@ -10,12 +10,29 @@
 - 標準啟動路徑：`RUN_START_COMMAND=1 ./init.sh`（實際指令見 init.sh 的 START_CMD）
 - 標準驗證路徑：./init.sh（pnpm install + pnpm test；2026-07-23 為 41 tests passed；另有 pnpm typecheck）
 - monetization-001：passing；AdMob／RevenueCat 已設定並**已實機驗證購買成功**（RevenueCat 官方事故已於 7/31 解決）；順帶修好 `useProGate.ts` 一個真實 bug（見工作階段 019）
-- 目前最高優先級未完成功能：無（下一輪從 feature_list.json 選下一個 not_started 功能）
+- appstore-001：passing；proactively 修復訂閱付費畫面缺 Apple Guideline 3.1.2(c) 必要資訊（跟 SPARKSHAPE 被拒的原因同一套範本缺口），Build 4 已重新送審（App Store Connect 顯示「正在等待審查」），Apple 實際審查結果尚未知
+- 目前最高優先級未完成功能：無（下一輪從 feature_list.json 選下一個 not_started 功能；appstore-001 已 passing，等待 Apple 審查結果非我方可控）
 - 目前 blocker：無
 - 背景：Apple Developer Program 已生效（2026-07-20）；ios-001～ios-009、test-001 皆已 passing；App icon 加了描邊解決對比度偏軟問題並實機確認；已設定 EAS Update（OTA）支援；eas.json 補上 appVersionSource remote／autoIncrement／ascAppId；報告頁日期選擇器統一成跟數據頁一樣的月曆樣式；修好「清空紀錄仍在月曆顯示紅點」的資料查詢 bug；新增真正的刪除單日紀錄功能（垃圾桶圖示＋二次確認，iOS/Android 共用）
 - Android release APK 本地建置已知隱患：`android/`（gitignored、由 `expo prebuild` 產生）曾長期未跟著 `app.json` 更新重新生成，導致累積 3 個潛在問題（AdMob meta-data 缺失、splash 缺 image、`softwareKeyboardLayoutMode` 值不合法），已於工作階段 020 全部修掉並改成每次本地建置前先 `rm -rf android && npx expo prebuild --platform android` 再 `assembleRelease`，避免舊 native 專案殘留
 
 ## 工作階段日誌
+
+### 工作階段 021
+
+- 日期：2026-08-10
+- 本輪目標：使用者請 Claude 檢查 SPARKPLATE/SPARKFIT/SPARKLOG 是否有跟 SPARKSHAPE 一樣的 App Store 審查缺口（訂閱付費畫面缺必要資訊），確認有之後主動修復並重新送審
+- 已完成：
+  - 確認本專案（當時在 App Store 審查佇列中，從未被拒絕過）的 `src/services/purchases.ts`／`src/constants/monetization.ts` 跟 SPARKSHAPE 修復前的版本結構完全相同，`app/settings.tsx` 的 PRO 解鎖卡片也只有一顆泛用「升級 Pro」按鈕，沒有 Apple Guideline 3.1.2(c) 要求的訂閱標題/期間/價格/服務條款/隱私權政策連結
+  - 使用者確認後，先在 App Store Connect 把當時等待審查中的提交項目撤回（避免舊 build 卡住）
+  - 套用 SPARKSHAPE/SPARKWEAR 同一組修法：新增 `PRIVACY_POLICY_URL`/`TERMS_OF_USE_URL`、新增 `fetchPackages`/`purchasePackage`、`app/settings.tsx` 的 PRO 卡片改成逐一列出 RevenueCat 真實方案（標題含「SPARK FIT」、期間、價格）＋可點擊的隱私權政策/服務條款連結
+  - `eas build --platform ios --profile production` 成功（Build 3→4，過程中一度誤以為 build log 顯示了錯誤的專案名稱/bundle id，重新用 `eas build:list` 與下載的 .ipa `Info.plist` 直接核對確認實際建置目標正確無誤才是顯示層面的暫時性錯覺）→ `eas submit --platform ios --profile production --latest` 成功上傳
+  - App Store Connect：等 Apple 處理完 Build 4 後換上新 build、確認無「受監管醫療器材聲明」阻擋項目、點「新增以供審查」重新送審
+- 執行過的驗證：`npx jest` 全過（48 tests，含新增的 fetchPackages/purchasePackage 測試）；`npx tsc --noEmit -p .` 零錯誤；`eas build`/`eas submit` 皆實際執行且成功；App Store Connect 確認重新送審後狀態為「正在等待審查」
+- 已擷取證據：見 feature_list.json appstore-001 evidence
+- 提交記錄：681f5ac（訂閱付費畫面修復）
+- 已知風險或未解決問題：Apple 這輪審查結果尚未知；本項是 proactive 修復（這個 App 本身未曾因這個理由被拒），最終是否通過需等 Apple 實際審查
+- 下一步最佳動作：等 Apple 審查結果（通常會寄信通知或在 App Store Connect 顯示）；若被拒，讀新的拒絕訊息內容再處理
 
 ### 工作階段 020
 
