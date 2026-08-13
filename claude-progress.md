@@ -11,12 +11,23 @@
 - 標準驗證路徑：./init.sh（pnpm install + pnpm test；2026-07-23 為 41 tests passed；另有 pnpm typecheck）
 - monetization-001：passing；AdMob／RevenueCat 已設定並**已實機驗證購買成功**（RevenueCat 官方事故已於 7/31 解決）；順帶修好 `useProGate.ts` 一個真實 bug（見工作階段 019）
 - appstore-001：passing；proactively 修復訂閱付費畫面缺 Apple Guideline 3.1.2(c) 必要資訊（跟 SPARKSHAPE 被拒的原因同一套範本缺口），Build 4 已重新送審（App Store Connect 顯示「正在等待審查」），Apple 實際審查結果尚未知
+- 2026-08-13：使用者要求把 App Store Connect 的繁體中文「App 資訊」名稱（App Store 上架顯示名稱）改為「SPARK FIT心動身形」（依使用者指定字串，FIT 與心動之間無空格），已在後台存檔成功；App 當時狀態為「正在等待審查」，純文案修改不影響排隊、不需重新提交，儲存後狀態仍維持「正在等待審查」
 - 目前最高優先級未完成功能：無（下一輪從 feature_list.json 選下一個 not_started 功能；appstore-001 已 passing，等待 Apple 審查結果非我方可控）
 - 目前 blocker：無
 - 背景：Apple Developer Program 已生效（2026-07-20）；ios-001～ios-009、test-001 皆已 passing；App icon 加了描邊解決對比度偏軟問題並實機確認；已設定 EAS Update（OTA）支援；eas.json 補上 appVersionSource remote／autoIncrement／ascAppId；報告頁日期選擇器統一成跟數據頁一樣的月曆樣式；修好「清空紀錄仍在月曆顯示紅點」的資料查詢 bug；新增真正的刪除單日紀錄功能（垃圾桶圖示＋二次確認，iOS/Android 共用）
 - Android release APK 本地建置已知隱患：`android/`（gitignored、由 `expo prebuild` 產生）曾長期未跟著 `app.json` 更新重新生成，導致累積 3 個潛在問題（AdMob meta-data 缺失、splash 缺 image、`softwareKeyboardLayoutMode` 值不合法），已於工作階段 020 全部修掉並改成每次本地建置前先 `rm -rf android && npx expo prebuild --platform android` 再 `assembleRelease`，避免舊 native 專案殘留
 
 ## 工作階段日誌
+
+### 工作階段 022
+
+- 日期：2026-08-13
+- 本輪目標：使用者要求把 App Store Connect 的繁體中文 App 名稱改為「SPARK FIT心動身形」，改完送出審核
+- 已完成：App Store Connect → App 資訊 → 繁體中文（主要語言）「名稱」欄位改為「SPARK FIT心動身形」並存檔；App 當時狀態為「正在等待審查」，確認純文案修改不需要額外送出動作（僅提交新 build 才需要先撤回審查）
+- 執行過的驗證：儲存後畫面顯示「已儲存」；App 列表頁確認名稱已變更、審查狀態仍是「正在等待審查」
+- 提交記錄：無程式碼變更，本輪未產生 git commit（純 App Store Connect 後台操作）
+- 已知風險或未解決問題：無
+- 下一步最佳動作：等 Apple 審查結果
 
 ### 工作階段 021
 
