@@ -10,7 +10,7 @@
 - 標準啟動路徑：`RUN_START_COMMAND=1 ./init.sh`（實際指令見 init.sh 的 START_CMD）
 - 標準驗證路徑：./init.sh（pnpm install + pnpm test；2026-07-23 為 41 tests passed；另有 pnpm typecheck）
 - monetization-001：passing；AdMob／RevenueCat 已設定並**已實機驗證購買成功**（RevenueCat 官方事故已於 7/31 解決）；順帶修好 `useProGate.ts` 一個真實 bug（見工作階段 019）
-- appstore-001：passing；proactively 修復訂閱付費畫面缺 Apple Guideline 3.1.2(c) 必要資訊（跟 SPARKSHAPE 被拒的原因同一套範本缺口），Build 4 已重新送審（App Store Connect 顯示「正在等待審查」），Apple 實際審查結果尚未知
+- appstore-001：passing（但 App 仍未上架，Apple 審查持續拉鋸中）；proactively 修復訂閱付費畫面缺 Apple Guideline 3.1.2(c) 必要資訊（跟 SPARKSHAPE 被拒的原因同一套範本缺口），Build 4 重新送審後 2026-08-10 收到新一輪拒絕——**Guideline 2.1 Information Needed**（非文案/程式碼問題，同一天 SPARKPLATE/SPARKSHAPE 也收到一樣的拒絕原因）：Apple 要求在「App 審查資訊→備註」補充裝置清單、App 說明、外部服務清單、地區差異、IAP 導覽方式，並附上實體裝置螢幕錄影；2026-08-19 使用者用 iPhone 17 錄了螢幕錄影（`assets/images/ScreenRecording_08-19-2026 13-07-55_1.mp4`，涵蓋主畫面啟動、核心功能瀏覽含新增數據表單、實際點「訂閱」跳出購買確認彈窗後安全取消兩次），Claude 用 ffmpeg 壓縮到 3.9MB、寫好備註文字並上傳，已重新提交至 App 審查，狀態變成「等待審查」
 - 2026-08-13：使用者要求把 App Store Connect 的繁體中文「App 資訊」名稱（App Store 上架顯示名稱）改為「SPARK FIT心動身形」（依使用者指定字串，FIT 與心動之間無空格），已在後台存檔成功；App 當時狀態為「正在等待審查」，純文案修改不影響排隊、不需重新提交，儲存後狀態仍維持「正在等待審查」
 - 目前最高優先級未完成功能：無（下一輪從 feature_list.json 選下一個 not_started 功能；appstore-001 已 passing，等待 Apple 審查結果非我方可控）
 - 目前 blocker：無
@@ -18,6 +18,21 @@
 - Android release APK 本地建置已知隱患：`android/`（gitignored、由 `expo prebuild` 產生）曾長期未跟著 `app.json` 更新重新生成，導致累積 3 個潛在問題（AdMob meta-data 缺失、splash 缺 image、`softwareKeyboardLayoutMode` 值不合法），已於工作階段 020 全部修掉並改成每次本地建置前先 `rm -rf android && npx expo prebuild --platform android` 再 `assembleRelease`，避免舊 native 專案殘留
 
 ## 工作階段日誌
+
+### 工作階段 023
+
+- 日期：2026-08-19
+- 本輪目標：使用者把手機螢幕錄影放進 `assets/images/`，請 Claude 檢查能不能用來回覆 Apple 的 Guideline 2.1 Information Needed 要求，可以的話上傳並重新送審（同一天已在 SPARKSHAPE／SPARKPLATE 做過同樣流程，這次直接套用學到的做法）
+- 已完成：
+  - 用 ffmpeg 擷取 `ScreenRecording_08-19-2026 13-07-55_1.mp4`（70秒）關鍵影格檢視內容：從主畫面點圖示啟動 App → 設定頁 PRO 訂閱卡片 → 點「訂閱」（處理中→跳出 TestFlight 沙盒購買確認彈窗，方案/價格/帳號/「僅供測試使用」皆可見）→ 瀏覽核心功能（身體組成數據、目標體重、實際點「+」開啟「新增數據」空白表單、報告頁日期區間折線圖）→ 從鎖定的「分析」頁再次觸發升級提示 → 第二次購買嘗試跳出要求輸入 Apple ID 密碼的 TestFlight 確認框（密碼欄位全程維持空白未輸入任何字元）→ 兩次購買皆顯示「升級失敗 Purchase was cancelled」安全取消；內容完整度高，一次到位不需重錄
+  - 原始檔案 91.4MB，超過瀏覽器上傳工具 10MB 限制，用 ffmpeg 壓縮（scale=750, crf 24, aac 96k）到 3.9MB，抽查畫面文字仍清楚可辨識
+  - 去 App Store Connect 確認這輪拒絕訊息內容（維持原本 7 點，跟 SPARKPLATE 一樣沒有 SPARKSHAPE 那輪額外出現的第 8 點），撰寫英文備註文字（涵蓋裝置清單 iPhone 17/iOS 26、App 功能與目標受眾、設定/存取說明、IAP 可購買項目與導覽方式、外部服務清單 RevenueCat/AdMob、地區差異、受監管產業聲明）
+  - App Store Connect：套用同日學到的正確順序——先點『更新審查內容』讓狀態從『已拒絕』轉成『準備審查』（此時備註會被清空但附件不會），重新填備註／上傳附件／存檔／重新整理頁面用 JavaScript 讀取 textarea.value 確認真的有持久化，最後點『重新提交至 App 審查』，狀態變成『等待審查』
+- 執行過的驗證：ffmpeg 擷取關鍵影格逐張檢視影片內容（含放大檢查密碼欄位全程空白，確認未輸入敏感資訊）；用瀏覽器 JavaScript 直接讀取 textarea.value 確認備註文字（2,953 字）在存檔＋重新整理後正確持久化；App Store Connect 頁面確認提交項目狀態變成『等待審查』
+- 已擷取證據：見 feature_list.json appstore-001 evidence（本輪新增）
+- 提交記錄：無程式碼變更，本輪未產生 git commit（純 App Store Connect 後台操作＋本機影片壓縮）
+- 已知風險或未解決問題：Apple 這輪審查結果尚未知
+- 下一步最佳動作：等 Apple 審查結果；若再被拒，讀新的拒絕訊息內容再處理
 
 ### 工作階段 022
 

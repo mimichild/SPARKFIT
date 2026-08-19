@@ -1,6 +1,6 @@
 {
   "project": "SPARKFIT",
-  "last_updated": "2026-07-17",
+  "last_updated": "2026-08-19",
   "rules": {
     "single_active_feature": true,
     "passing_requires_evidence": true,
@@ -227,9 +227,13 @@
         "2026-08-10 | src/constants/monetization.ts 新增 PRIVACY_POLICY_URL/TERMS_OF_USE_URL；src/services/purchases.ts 新增 fetchPackages/purchasePackage；app/settings.tsx 的 PRO 解鎖卡片改成逐一渲染 RevenueCat 真實方案（標題含「SPARK FIT」、期間、價格）並加上可點擊的隱私權政策/服務條款連結 | 測試與 typecheck 皆通過（詳見對應 commit）",
         "2026-08-10 | git commit 681f5ac（訂閱付費畫面修復）| 已提交",
         "2026-08-10 | npx eas build --platform ios --profile production --non-interactive → npx eas submit --platform ios --profile production --latest --non-interactive | Build 4 建置成功並上傳至 App Store Connect",
-        "2026-08-10 | App Store Connect：先將既有等待審查中的提交項目移除（避免舊 build 卡住審查佇列），等 Apple 處理完 Build 4 後換上新 build、儲存、確認無『受監管醫療器材聲明』阻擋項目、點『新增以供審查』| 狀態變成『正在等待審查』，成功重新送審"
+        "2026-08-10 | App Store Connect：先將既有等待審查中的提交項目移除（避免舊 build 卡住審查佇列），等 Apple 處理完 Build 4 後換上新 build、儲存、確認無『受監管醫療器材聲明』阻擋項目、點『新增以供審查』| 狀態變成『正在等待審查』，成功重新送審",
+        "2026-08-10（實際判定於 2026-08-19）| 讀取 App Store Connect 拒絕訊息（Submission ID bb0979d6-4b84-4bcf-8dad-c299ce2c22da，Apple 訊息 08/14 下午2:02）| 新一輪拒絕：Guideline 2.1 Performance: App Completeness，訊息全文為『Information Needed - New App Submission』——非文案/程式碼問題，Apple 要求在『App 審查資訊→備註』補充 7 項資訊（含實體裝置螢幕錄影展示核心流程含購買/訂閱流程、測試裝置清單、App 說明、外部服務清單、地區差異、受監管產業聲明），與同時期 SPARKPLATE/SPARKSHAPE 收到的拒絕原因相同",
+        "2026-08-19 | 使用者提供螢幕錄影 assets/images/ScreenRecording_08-19-2026 13-07-55_1.mp4（70秒，iPhone 17 實機錄製）| 用 ffmpeg 逐格檢視，確認涵蓋主畫面啟動 App、瀏覽核心功能（身體組成數據/報告折線圖）、實際點『+』開啟『新增數據』空白表單、兩次點『訂閱』觸發 TestFlight 沙盒購買確認彈窗（含一次要求輸入 Apple ID 密碼，密碼欄位全程空白未輸入）後皆安全取消（顯示『Purchase was cancelled』），判定內容完整可直接使用，不需重錄",
+        "2026-08-19 | ffmpeg -vf scale=750:-2 -c:v libx264 -crf 24 -c:a aac -b:a 96k（原始 91.4MB 超過瀏覽器上傳工具 10MB 限制）| 壓縮後 3.9MB，抽查畫面文字仍清楚可辨識",
+        "2026-08-19 | App Store Connect：先點『更新審查內容』讓狀態從『已拒絕』轉成『準備審查』，填入英文備註（2,953 字，涵蓋裝置清單 iPhone 17/iOS 26、App 說明、設定/存取說明、IAP 可購買項目與導覽方式、外部服務清單、地區差異、受監管產業聲明）、上傳壓縮後影片至附件、存檔，並用瀏覽器 JavaScript 讀取 textarea.value 確認存檔＋重新整理後備註文字仍正確持久化，最後點『重新提交至 App 審查』| Pro 訂閱／iOS App 1.0 (Build 4) 狀態全部變成『等待審查』，成功重新送審"
       ],
-      "notes": "本項是 proactive 修復——這個 App 本身尚未被 Apple 用這個理由拒絕過，是因為姊妹 App SPARKSHAPE 用同一套範本被拒絕，判斷同樣缺口大機率會在人工審查看到付費畫面時被拒，因此在使用者確認後（先撤回審查中的舊提交）主動套用同樣修法再重新送審。Apple 這輪實際審查結果尚未知，若再被拒需視新的拒絕理由處理。"
+      "notes": "本項是 proactive 修復——這個 App 本身尚未被 Apple 用這個理由拒絕過，是因為姊妹 App SPARKSHAPE 用同一套範本被拒絕，判斷同樣缺口大機率會在人工審查看到付費畫面時被拒，因此在使用者確認後（先撤回審查中的舊提交）主動套用同樣修法再重新送審。2026-08-10 Build 4 重新送審後收到第二輪拒絕（2.1 Information Needed），性質跟第一輪（3.1.2(c) 文案缺口）完全不同，是 Apple 對『從未有審核通過紀錄的新 App』的資訊要求機制，SPARKPLATE/SPARKSHAPE 同時期都收到一模一樣的拒絕原因。2026-08-19 補齊：使用者用 iPhone 17 錄好螢幕錄影（涵蓋核心功能與完整購買流程，兩次都安全取消未觸及密碼輸入），Claude 用 ffmpeg 壓縮到 3.9MB（原始 91.4MB 超過上傳工具 10MB 限制）並撰寫備註文字上傳。App Store Connect 操作要點（同日在其他 App 摸出的規律）：點『更新審查內容』後備註欄位會被清空但附件不會，須在狀態轉成『準備審查』後重新填備註存檔，並重新整理頁面確認真的持久化，才能點『重新提交至 App 審查』。修完後同樣要等 Apple 審查結果。"
     }
   ]
 }
