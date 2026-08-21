@@ -19,6 +19,27 @@
 
 ## 工作階段日誌
 
+### 工作階段 024
+
+- 日期：2026-08-21
+- 本輪目標：查看 8/21 新一輪 App 審查拒絕原因並逐一修復後重新送審
+- 已完成：
+  - 讀取這輪拒絕訊息，確認為 3 條：2.3.7（名稱/副標題含不相關內容）、3.1.2(c)（訂閱畫面缺 EULA 連結）、4.1.0 Copycat（App 名稱含「SparkFit」與第三方撞名）
+  - 3.1.2(c)：確認 App 描述已有 EULA 連結（`https://www.apple.com/legal/internet-services/itunes/dev/stdeula/`），實際打開 App 內「隱私權政策」「服務條款」連結驗證都能正常開啟；使用者提供新錄的 `video 2.mp4`（44秒，有實際點開兩個連結證明可用），Claude 逐幀檢查內容合格後直接附加回覆 App 審查訊息
+  - 4.1/2.3.7：比對其他 4 個 SPARK 系列 App 的審查狀態（SPARK WEAR／SPARK SHAPE 已上架、SPARK LOG 另一原因被拒），確認只有「SPARK FIT」這個名稱組合撞名，其他 App 不受影響；使用者決定改名為「SPARK SCALE」
+  - 改名執行範圍：`app.json`（name + 3 處相機/相簿權限說明文字）、iOS `Info.plist`（CFBundleDisplayName + 權限文字）、Android `strings.xml`/`settings.gradle`、App 內 4 處 UI 標題文字（首頁/資料頁/報告頁/分析頁）、訂閱方案顯示文字（`app/settings.tsx`）、匯出備份提示訊息（`src/hooks/useBackup.ts`）；明確不動 `bundleIdentifier`/`package`（`com.sparkfit.app`，牽動 App Store Connect 綁定與 IAP，不能改）與 SQLite DB 檔名（純內部識別碼）
+  - 圖示：使用者提供新設計（體重計圖案），去背後依原圖示比例（圓形佔畫布約90%）重新輸出 `icon.png`（1024×1024 RGB 無透明度）與 `adaptive-icon.png`（747×747 RGBA 真透明），跑 `npx expo prebuild` 同步到 iOS/Android 原生專案，實際打開檔案確認圖示內容正確
+  - App Store Connect 同步更新：App 名稱→「SPARK SCALE心動體重」、描述內文（「SPARK FIT 誕生了」→「SPARK SCALE」）、App 審查資訊備註（2 處英文提及）、訂閱群組顯示名稱（「SPARK FIT Pro」→「SPARK SCALE Pro」）；副標題後續改為「記錄體重身形，圖表追蹤趨勢」（原本「數據化管理體態，穿搭避坑不踩雷」用語偏口語行銷，怕觸發 2.3.7）
+  - 重新拍攝 4 張 App Store 截圖（iPhone 13 Pro Max 模擬器，1284×2778 符合 6.5 吋規格）：build 新版 App、用 cliclick + AppleScript 操作模擬器點擊/滑動、期間發現測試廣告會蓋住畫面，暫時把 `useIsPro.ts` 改成強制回傳 true 拍完立刻改回並用 `git diff` 確認完全還原乾淨；4 張截圖轉 RGB 去除 alpha 後用 `file_upload` 工具上傳、存檔
+  - 確認 App Store Connect 其他欄位（版權、支援/行銷 URL、關鍵字、自訂產品頁面）都乾淨、不需更動；發現外部支援網站 `kyomistudio.github.io/support.html` 仍列著「SPARK FIT」，但該網站不在本 repo，留給使用者另外處理
+  - `git commit`（`03469d8`）只包含改名相關的 9 個檔案，兩支審查證明影片刻意不入庫（非 App 資產）
+  - 副標題存檔後點擊「重新提交至 App 審查」，狀態變成「等待審查」
+- 執行過的驗證：`npm run typecheck` 通過；`npm test` 48 個測試全數通過（含改動前後各跑一次確認 `useIsPro.ts` 暫時改動有完整還原）；`git status`/`git diff` 逐一核對改動範圍精確無誤；4 張截圖用 Python PIL 確認尺寸 1284×2778、RGB 無 alpha；App Store Connect 畫面截圖逐項核對名稱/副標題/描述/截圖/訂閱群組顯示名稱皆已更新
+- 已擷取證據：見 feature_list.json appstore-001 evidence（本輪新增）
+- 提交記錄：`03469d8` fix: App 改名為 SPARK SCALE，修復 4.1 Copycat 撞名與 2.3.7 metadata 審查問題
+- 已知風險或未解決問題：Apple 這輪審查結果尚未知；外部支援網站文案未同步改名（不在本 repo 範圍）
+- 下一步最佳動作：等 Apple 審查結果；若再被拒，讀新的拒絕訊息內容再處理
+
 ### 工作階段 023
 
 - 日期：2026-08-19
