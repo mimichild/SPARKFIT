@@ -16,7 +16,7 @@ export default function WelcomeScreen() {
 
       {/* Centre — title + subtitle */}
       <View style={styles.center}>
-        <Text style={styles.title}>SPARK FIT</Text>
+        <Text style={styles.title}>SPARK SCALE</Text>
         <Text style={styles.subtitle}>記錄所有的數據，我要見證我的蛻變</Text>
       </View>
 

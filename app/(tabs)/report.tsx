@@ -230,7 +230,7 @@ export default function ReportScreen() {
             <Ionicons name="chevron-back" size={26} color={themeColor} />
           </TouchableOpacity>
           <View style={styles.headerCenter}>
-            <Text style={[styles.appTitle, { color: themeColor }]}>SPARKFIT</Text>
+            <Text style={[styles.appTitle, { color: themeColor }]}>SPARK SCALE</Text>
             <Text style={styles.pageTitle}>報告</Text>
           </View>
           <View style={styles.headerSpacer} />

@@ -85,7 +85,7 @@ export default function DataScreen() {
             <Ionicons name="chevron-back" size={26} color={themeColor} />
           </TouchableOpacity>
           <View style={styles.headerCenter}>
-            <Text style={[styles.appTitle, { color: themeColor }]}>SPARKFIT</Text>
+            <Text style={[styles.appTitle, { color: themeColor }]}>SPARK SCALE</Text>
             <TouchableOpacity onPress={openPicker} activeOpacity={0.7}>
               <Text style={styles.date}>{formatDate(selectedDate)}</Text>
             </TouchableOpacity>

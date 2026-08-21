@@ -14,8 +14,8 @@ import { THEME_COLORS } from '@/constants';
 import { Colors } from '@/constants/colors';
 
 function packagePlanLabel(pkg: PurchasesPackage): string {
-  if (pkg.packageType === 'ANNUAL') return 'SPARK FIT Pro 年費方案';
-  if (pkg.packageType === 'MONTHLY') return 'SPARK FIT Pro 月費方案';
+  if (pkg.packageType === 'ANNUAL') return 'SPARK SCALE Pro 年費方案';
+  if (pkg.packageType === 'MONTHLY') return 'SPARK SCALE Pro 月費方案';
   return pkg.product.title;
 }
 

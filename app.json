@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "SPARKFIT",
+    "name": "SPARK SCALE",
     "slug": "sparkfit",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -55,20 +55,20 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "SPARKFIT 需要相機權限以拍攝身材照片"
+          "cameraPermission": "SPARK SCALE 需要相機權限以拍攝身材照片"
         }
       ],
       [
         "expo-media-library",
         {
-          "photosPermission": "SPARKFIT 需要相簿權限以儲存照片",
-          "savePhotosPermission": "SPARKFIT 需要儲存照片到相簿"
+          "photosPermission": "SPARK SCALE 需要相簿權限以儲存照片",
+          "savePhotosPermission": "SPARK SCALE 需要儲存照片到相簿"
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "SPARKFIT 需要相簿存取權限以選取照片"
+          "photosPermission": "SPARK SCALE 需要相簿存取權限以選取照片"
         }
       ],
       [
