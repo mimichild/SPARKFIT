@@ -11,6 +11,7 @@
 - 標準驗證路徑：./init.sh（pnpm install + pnpm test；2026-07-23 為 41 tests passed；另有 pnpm typecheck）
 - monetization-001：passing；AdMob／RevenueCat 已設定並**已實機驗證購買成功**（RevenueCat 官方事故已於 7/31 解決）；順帶修好 `useProGate.ts` 一個真實 bug（見工作階段 019）
 - appstore-001：passing（但 App 仍未上架，Apple 審查持續拉鋸中）；proactively 修復訂閱付費畫面缺 Apple Guideline 3.1.2(c) 必要資訊（跟 SPARKSHAPE 被拒的原因同一套範本缺口），Build 4 重新送審後 2026-08-10 收到新一輪拒絕——**Guideline 2.1 Information Needed**（非文案/程式碼問題，同一天 SPARKPLATE/SPARKSHAPE 也收到一樣的拒絕原因）：Apple 要求在「App 審查資訊→備註」補充裝置清單、App 說明、外部服務清單、地區差異、IAP 導覽方式，並附上實體裝置螢幕錄影；2026-08-19 使用者用 iPhone 17 錄了螢幕錄影（`assets/images/ScreenRecording_08-19-2026 13-07-55_1.mp4`，涵蓋主畫面啟動、核心功能瀏覽含新增數據表單、實際點「訂閱」跳出購買確認彈窗後安全取消兩次），Claude 用 ffmpeg 壓縮到 3.9MB、寫好備註文字並上傳，已重新提交至 App 審查，狀態變成「等待審查」
+- **2026-09-22 重大變更：App 已遷移到全新 bundle ID `com.sparkscale.app` / 全新 Apple ID `6814699374`**（舊 Apple ID `6793043215`、舊 bundle `com.sparkfit.app` 已棄用但保留，改名為「SPARK SCALE（舊）」）。根因：舊記錄因先前工作階段只改了 App 顯示名稱，底層 bundle ID 仍是 `com.sparkfit.app`，被 Apple Guideline 4.1(a) Copycat 判定與其他已上架 App 撞名而反覆拒絕；bundle ID 建立後不可變更，故整套遷移到新 App 記錄（含新 RevenueCat App 綁定、新 Public API Key `appl_LdlUdHizyufsAJLaTjgsasWaiQI`）。`app.json`/`eas.json`/`src/constants/monetization.ts` 皆已改用新值並已 build+submit 成功。App Store Connect 新記錄的 App 資訊、中英文 Store 描述、截圖、隱私權政策 URL（逐 locale）、訂閱群組與兩個訂閱項目皆已搬遷完成，已合併提交（App 版本+訂閱群組+2 個訂閱項目共 4 項）並顯示「已提交 4 個項目」，狀態為「正在等待審查」
 - 2026-08-13：使用者要求把 App Store Connect 的繁體中文「App 資訊」名稱（App Store 上架顯示名稱）改為「SPARK FIT心動身形」（依使用者指定字串，FIT 與心動之間無空格），已在後台存檔成功；App 當時狀態為「正在等待審查」，純文案修改不影響排隊、不需重新提交，儲存後狀態仍維持「正在等待審查」
 - 目前最高優先級未完成功能：無（下一輪從 feature_list.json 選下一個 not_started 功能；appstore-001 已 passing，等待 Apple 審查結果非我方可控）
 - 目前 blocker：無
@@ -18,6 +19,28 @@
 - Android release APK 本地建置已知隱患：`android/`（gitignored、由 `expo prebuild` 產生）曾長期未跟著 `app.json` 更新重新生成，導致累積 3 個潛在問題（AdMob meta-data 缺失、splash 缺 image、`softwareKeyboardLayoutMode` 值不合法），已於工作階段 020 全部修掉並改成每次本地建置前先 `rm -rf android && npx expo prebuild --platform android` 再 `assembleRelease`，避免舊 native 專案殘留
 
 ## 工作階段日誌
+
+### 工作階段 025
+
+- 日期：2026-09-22
+- 本輪目標：使用者回報 SPARK SCALE（舊 Apple ID 6793043215）「一直沒有審核」，查明原因並修復
+- 已完成：
+  - 查明並非單純審核延遲，是兩個問題疊加：(1) 3.1.2(c) 英文 locale App 描述仍缺 EULA 連結（跟 SPARKLOG 第六輪拒絕同一套範本漏洞，只修了繁中）；(2) Guideline 4.1(a) Copycat——App 顯示名稱雖已在工作階段 024 改成 SPARK SCALE，但 `bundleIdentifier`/`package` 仍是 `com.sparkfit.app`，Apple 人工審查員檢查底層 bundle ID 判定與其他已上架 App 撞名
+  - 先與使用者確認分階段處理：本輪先修 EULA 送審一輪當診斷，bundle ID 暫緩
+  - 使用者後續主動要求「也要修改 Bundle ID」，確認新 bundle ID 命名為 `com.sparkscale.app`，並授權一次做完整套遷移，僅在真正需要人工操作處才停下確認
+  - 執行完整遷移：
+    1. Apple Developer Portal 註冊新 identifier `com.sparkscale.app`
+    2. 嘗試建立新 App Store Connect App 記錄時因中/英文名稱與舊記錄衝突失敗兩次，改名舊記錄（繁中「SPARK SCALE（舊）」、英文「SPARK SCALE (Old)」）釋放名稱後成功建立新記錄（Apple ID **6814699374**）
+    3. `app.json`（iOS/Android bundle）、`eas.json`（`ascAppId`）、`src/constants/monetization.ts`（`REVENUECAT_API_KEY`）三處改成新值；`pnpm test`（48 tests 全過）、`pnpm typecheck`（無錯誤）後 commit
+    4. RevenueCat 建立新「SPARK SCALE (App Store)」App，綁定新 bundle ID，沿用帳號共用的 In-App Purchase Key（`XLCX2BBUZB`），取得新 Public API Key
+    5. 使用者於自己的 Terminal.app 互動執行 `eas build --platform ios --profile production`（非互動模式對全新 bundle ID 的憑證設定會失敗）成功產出 .ipa，再互動執行 `eas submit` 成功上傳到新 App 記錄的 TestFlight
+    6. 逐項從舊 App 記錄搬遷 App Store Connect metadata 到新記錄：主要類別（發現 select 下拉選單視覺上像有選取但 `.value` 實際是空字串，須用 JS 直接設定並 dispatch change 事件）、中英文 Store 描述（順手修正英文描述殘留的舊「SPARK FIT」品牌字樣）、4 張 App Store 截圖（用 curl 直接抓舊 App 頁面上公開的 mzstatic.com CDN 原始解析度圖檔）、隱私權政策 URL（發現此欄位逐 locale 獨立設定，英文 locale 原本是空的——同一套「只修中文漏修英文」通病再次出現）、年齡分級、訂閱群組「SPARK SCALE Pro」自己的本地化顯示名稱（跟個別方案本地化是分開的欄位）、Pro 月費／年費兩個訂閱項目含跨 175 個國家/地區的定價
+    7. App Store Connect：把 iOS App 1.0.0(3)＋訂閱群組＋Pro 月費＋Pro 年費四個項目透過各自的「新增以供審查」→「iOS 提交項目草稿」合併成同一份草稿，確認「已可提交的項目 (4)」無誤後點擊「提交以供審查」，顯示「已提交 4 個項目」
+- 執行過的驗證：`pnpm test`（48 tests 全過）；`pnpm typecheck`（無錯誤）；`eas build`/`eas submit` 皆由使用者實際互動執行且成功；App Store Connect 頁面確認 App 版本狀態為「正在等待審查」
+- 已擷取證據：見 feature_list.json appstore-001 evidence（本輪新增，含完整遷移步驟）
+- 提交記錄：換用新 bundle ID `com.sparkscale.app` 解決 Apple 4.1(c) SparkFit 撞名拒絕（詳見本輪 commit）
+- 已知風險或未解決問題：Apple 這輪審查結果尚未知；舊 App 記錄（Apple ID 6793043215）已改名保留但未刪除，無明確處置決定（目前無流量、放著無害）；「只修中文 locale 漏修英文 locale」在本帳號已反覆出現至少 3 次（本次 EULA、隱私權政策 URL 皆是），是系統性漏洞模式，之後任何 locale 相關欄位修改都要逐一檢查每個已發佈語系
+- 下一步最佳動作：等 Apple 審查結果；若被拒，讀新的拒絕訊息內容再處理
 
 ### 工作階段 024
 

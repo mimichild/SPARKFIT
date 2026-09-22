@@ -1,6 +1,6 @@
 {
   "project": "SPARKFIT",
-  "last_updated": "2026-08-19",
+  "last_updated": "2026-09-22",
   "rules": {
     "single_active_feature": true,
     "passing_requires_evidence": true,
@@ -231,9 +231,17 @@
         "2026-08-10（實際判定於 2026-08-19）| 讀取 App Store Connect 拒絕訊息（Submission ID bb0979d6-4b84-4bcf-8dad-c299ce2c22da，Apple 訊息 08/14 下午2:02）| 新一輪拒絕：Guideline 2.1 Performance: App Completeness，訊息全文為『Information Needed - New App Submission』——非文案/程式碼問題，Apple 要求在『App 審查資訊→備註』補充 7 項資訊（含實體裝置螢幕錄影展示核心流程含購買/訂閱流程、測試裝置清單、App 說明、外部服務清單、地區差異、受監管產業聲明），與同時期 SPARKPLATE/SPARKSHAPE 收到的拒絕原因相同",
         "2026-08-19 | 使用者提供螢幕錄影 assets/images/ScreenRecording_08-19-2026 13-07-55_1.mp4（70秒，iPhone 17 實機錄製）| 用 ffmpeg 逐格檢視，確認涵蓋主畫面啟動 App、瀏覽核心功能（身體組成數據/報告折線圖）、實際點『+』開啟『新增數據』空白表單、兩次點『訂閱』觸發 TestFlight 沙盒購買確認彈窗（含一次要求輸入 Apple ID 密碼，密碼欄位全程空白未輸入）後皆安全取消（顯示『Purchase was cancelled』），判定內容完整可直接使用，不需重錄",
         "2026-08-19 | ffmpeg -vf scale=750:-2 -c:v libx264 -crf 24 -c:a aac -b:a 96k（原始 91.4MB 超過瀏覽器上傳工具 10MB 限制）| 壓縮後 3.9MB，抽查畫面文字仍清楚可辨識",
-        "2026-08-19 | App Store Connect：先點『更新審查內容』讓狀態從『已拒絕』轉成『準備審查』，填入英文備註（2,953 字，涵蓋裝置清單 iPhone 17/iOS 26、App 說明、設定/存取說明、IAP 可購買項目與導覽方式、外部服務清單、地區差異、受監管產業聲明）、上傳壓縮後影片至附件、存檔，並用瀏覽器 JavaScript 讀取 textarea.value 確認存檔＋重新整理後備註文字仍正確持久化，最後點『重新提交至 App 審查』| Pro 訂閱／iOS App 1.0 (Build 4) 狀態全部變成『等待審查』，成功重新送審"
+        "2026-08-19 | App Store Connect：先點『更新審查內容』讓狀態從『已拒絕』轉成『準備審查』，填入英文備註（2,953 字，涵蓋裝置清單 iPhone 17/iOS 26、App 說明、設定/存取說明、IAP 可購買項目與導覽方式、外部服務清單、地區差異、受監管產業聲明）、上傳壓縮後影片至附件、存檔，並用瀏覽器 JavaScript 讀取 textarea.value 確認存檔＋重新整理後備註文字仍正確持久化，最後點『重新提交至 App 審查』| Pro 訂閱／iOS App 1.0 (Build 4) 狀態全部變成『等待審查』，成功重新送審",
+        "2026-09-18 | 使用者回報 SPARK SCALE（舊 Apple ID 6793043215）『一直沒有審核』| 查明並非審核延遲，是兩個問題疊加：(1) 3.1.2(c) 英文 locale 描述仍缺 EULA 連結（跟 SPARKLOG 同一套範本漏洞，只修了繁中）；(2) Guideline 4.1(a) Copycat——App 顯示名稱雖已改成 SPARK SCALE，但 bundleIdentifier/package 仍是 com.sparkfit.app，Apple 人工審查員會檢查底層 bundle ID 與其他已上架 App 撞名",
+        "2026-09-18 | 使用者確認先修 EULA 診斷送審一輪、bundle ID 暫緩，後續使用者主動要求『也要修改 Bundle ID』，確認新 bundle ID 命名為 com.sparkscale.app | 判定 bundle ID 一旦建立 App 記錄即永久不可變更，須整套遷移到全新 App Store Connect App 記錄（新 Apple ID）",
+        "2026-09-18~22 | 執行完整遷移：Apple Developer Portal 註冊新 identifier com.sparkscale.app → 建立全新 App Store Connect App 記錄（Apple ID 6814699374，因與舊記錄的中/英文名稱衝突，先將舊記錄改名為『SPARK SCALE（舊）』/『SPARK SCALE (Old)』釋放名稱）→ app.json/eas.json 的 bundleIdentifier/package/ascAppId 全部改成新值 → RevenueCat 建立新『SPARK SCALE (App Store)』App 綁定新 bundle ID，沿用共用的 In-App Purchase Key，取得新 Public API Key → src/constants/monetization.ts 換上新 key",
+        "2026-09-22 | git commit（換用新 bundle ID）| pnpm test 48 tests 全過、pnpm typecheck 無錯誤，已提交",
+        "2026-09-22 | 使用者於自己的 Terminal.app 互動執行 eas build --platform ios --profile production（非互動模式在此帳號下對全新 bundle ID 的憑證設定會失敗，須互動執行）| 成功產出 .ipa",
+        "2026-09-22 | 使用者互動執行 eas submit --platform ios --profile production --latest | 成功上傳至新 App Store Connect App 記錄 (6814699374) 的 TestFlight",
+        "2026-09-22 | 從舊 App 記錄逐項搬遷 App Store Connect metadata 到新記錄：App 資訊（主要類別 健康與健身，透過 JS 直接設定 select.value 才發現原本視覺上看似選取但實際 value 是空字串的坑）、中英文 Store 描述（英文描述順手修正舊記錄殘留的『SPARK FIT』品牌殘留字樣為『SPARK SCALE』）、4 張 App Store 截圖（從舊 App 的 mzstatic.com CDN 公開網址直接 curl 下載原始解析度圖檔）、隱私權政策 URL（發現該欄位是逐 locale 獨立設定，英文 locale 原本是空的，是同一套『只修中文漏修英文』的歷史通病再次出現）、年齡分級、訂閱群組 SPARK SCALE Pro（含群組自己獨立的顯示名稱本地化，非個別方案的本地化）、Pro 月費／年費兩個訂閱項目（含定價，沿用舊記錄橫跨 175 個國家/地區的價格）及審查用截圖",
+        "2026-09-22 | App Store Connect：把 iOS App 1.0.0(3)、SPARK SCALE Pro 訂閱群組、Pro 月費、Pro 年費 四個項目透過『新增以供審查』→『iOS 提交項目草稿』合併成同一份提交草稿，逐一確認『已可提交的項目 (4)』無誤後點擊『提交以供審查』| 顯示『已提交 4 個項目』，App 版本狀態變成『正在等待審查』，成功將新 bundle ID 的完整 App 記錄送交 Apple 審查"
       ],
-      "notes": "本項是 proactive 修復——這個 App 本身尚未被 Apple 用這個理由拒絕過，是因為姊妹 App SPARKSHAPE 用同一套範本被拒絕，判斷同樣缺口大機率會在人工審查看到付費畫面時被拒，因此在使用者確認後（先撤回審查中的舊提交）主動套用同樣修法再重新送審。2026-08-10 Build 4 重新送審後收到第二輪拒絕（2.1 Information Needed），性質跟第一輪（3.1.2(c) 文案缺口）完全不同，是 Apple 對『從未有審核通過紀錄的新 App』的資訊要求機制，SPARKPLATE/SPARKSHAPE 同時期都收到一模一樣的拒絕原因。2026-08-19 補齊：使用者用 iPhone 17 錄好螢幕錄影（涵蓋核心功能與完整購買流程，兩次都安全取消未觸及密碼輸入），Claude 用 ffmpeg 壓縮到 3.9MB（原始 91.4MB 超過上傳工具 10MB 限制）並撰寫備註文字上傳。App Store Connect 操作要點（同日在其他 App 摸出的規律）：點『更新審查內容』後備註欄位會被清空但附件不會，須在狀態轉成『準備審查』後重新填備註存檔，並重新整理頁面確認真的持久化，才能點『重新提交至 App 審查』。修完後同樣要等 Apple 審查結果。"
+      "notes": "本項是 proactive 修復——這個 App 本身尚未被 Apple 用這個理由拒絕過，是因為姊妹 App SPARKSHAPE 用同一套範本被拒絕，判斷同樣缺口大機率會在人工審查看到付費畫面時被拒，因此在使用者確認後（先撤回審查中的舊提交）主動套用同樣修法再重新送審。2026-08-10 Build 4 重新送審後收到第二輪拒絕（2.1 Information Needed），性質跟第一輪（3.1.2(c) 文案缺口）完全不同，是 Apple 對『從未有審核通過紀錄的新 App』的資訊要求機制，SPARKPLATE/SPARKSHAPE 同時期都收到一模一樣的拒絕原因。2026-08-19 補齊：使用者用 iPhone 17 錄好螢幕錄影（涵蓋核心功能與完整購買流程，兩次都安全取消未觸及密碼輸入），Claude 用 ffmpeg 壓縮到 3.9MB（原始 91.4MB 超過上傳工具 10MB 限制）並撰寫備註文字上傳。App Store Connect 操作要點（同日在其他 App 摸出的規律）：點『更新審查內容』後備註欄位會被清空但附件不會，須在狀態轉成『準備審查』後重新填備註存檔，並重新整理頁面確認真的持久化，才能點『重新提交至 App 審查』。修完後同樣要等 Apple 審查結果。 2026-09-22 追加：SPARK SCALE 舊 App 記錄（Apple ID 6793043215）因 4.1(a) Copycat 反覆被拒（根因是先前工作階段只改了顯示名稱，底層 bundleIdentifier 仍是 com.sparkfit.app 與其他已上架 App 撞名），確認 bundle ID 不可變更後，完整遷移到新 App 記錄（Apple ID 6814699374，bundle com.sparkscale.app）。舊記錄已改名為『SPARK SCALE（舊）』保留但不再使用，未刪除任何資料。此次也再次驗證『只修中文 locale 漏修英文 locale』是本帳號跨多個 App 反覆出現的系統性漏洞模式（EULA 連結、隱私權政策 URL 皆曾只修中文），未來任何 locale 相關欄位修改都必須明確逐一檢查每個已發佈語系。"
     }
   ]
 }
