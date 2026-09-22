@@ -39,8 +39,9 @@
 - 執行過的驗證：`pnpm test`（48 tests 全過）；`pnpm typecheck`（無錯誤）；`eas build`/`eas submit` 皆由使用者實際互動執行且成功；App Store Connect 頁面確認 App 版本狀態為「正在等待審查」
 - 已擷取證據：見 feature_list.json appstore-001 evidence（本輪新增，含完整遷移步驟）
 - 提交記錄：換用新 bundle ID `com.sparkscale.app` 解決 Apple 4.1(c) SparkFit 撞名拒絕（詳見本輪 commit）
-- 已知風險或未解決問題：Apple 這輪審查結果尚未知；舊 App 記錄（Apple ID 6793043215）已改名保留但未刪除，無明確處置決定（目前無流量、放著無害）；「只修中文 locale 漏修英文 locale」在本帳號已反覆出現至少 3 次（本次 EULA、隱私權政策 URL 皆是），是系統性漏洞模式，之後任何 locale 相關欄位修改都要逐一檢查每個已發佈語系
+- 已知風險或未解決問題：Apple 這輪審查結果尚未知；「只修中文 locale 漏修英文 locale」在本帳號已反覆出現至少 3 次（本次 EULA、隱私權政策 URL 皆是），是系統性漏洞模式，之後任何 locale 相關欄位修改都要逐一檢查每個已發佈語系
 - 下一步最佳動作：等 Apple 審查結果；若被拒，讀新的拒絕訊息內容再處理
+- 補充（同日稍後）：使用者詢問舊記錄「保留但停用」的確切狀態，查證發現舊記錄其實還有一筆診斷回合送出、尚未撤回的「等待審查」提交（bundle ID 從未修正，幾乎必然會再次被 4.1(a) 拒絕）。經使用者確認後，於 App Store Connect 舊記錄的 iOS App 版本頁面點擊「將此版本從審查中移除」並確認，狀態變成「被開發者拒絕」，三筆歷史提交全部顯示「已移除」，舊記錄自此完全閒置、不會再被 Apple 審查。App Store Connect 不提供刪除已有審查紀錄之 App 記錄的功能，故舊記錄長期保留但不再使用即可，無需進一步處置。
 
 ### 工作階段 024
 
