@@ -77,7 +77,8 @@
           "androidAppId": "ca-app-pub-3940256099942544~3347511713",
           "iosAppId": "ca-app-pub-8914492142878610~7474624319"
         }
-      ]
+      ],
+      "./plugins/withGradleMemory"
     ],
     "extra": {
       "router": {},

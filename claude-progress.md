@@ -33,6 +33,10 @@
 - 執行過的驗證：`pnpm test`（89 passed）、`pnpm typecheck`；APK 上傳後確認 Drive item-id xattr 存在
 - 已知風險或未解決問題：等使用者確認手機上是否仍有舊 com.sparkfit.app；匯出備份需 Pro，若舊 App 無法匯出，可考慮以舊套件 ID + 同一 debug keystore 建置覆蓋更新舊 App 以取得匯出；`android/gradle.properties` 記憶體設定會在下次 prebuild 被覆蓋
 - 下一步最佳動作：依使用者回覆協助搬移舊資料；把 Gradle 記憶體設定寫入 app.json（expo-build-properties 或 config plugin）
+- 補充（同日稍後）：
+  - 資料遺失已解決：確認 8/21 的 APK 建於改名（03469d8）之後，舊 App 名稱/圖示同為「SPARK SCALE」但套件 ID 為 com.sparkfit.app，手機上兩個 App 外觀完全相同；使用者已從舊 App 匯出、匯入新 App（com.sparkscale.app），舊 App 暫時保留待確認
+  - 新增 `plugins/withGradleMemory.js` config plugin（寫入 app.json plugins），每次 prebuild 自動把 org.gradle.jvmargs 設為 -Xmx4096m -XX:MaxMetaspaceSize=1536m
+  - 重新建置 APK（含「_」空值顯示）上傳 Drive `SPARK-Builds/SPARK SCALE/`
 
 ### 工作階段 027
 
