@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, Pressable, StyleSheet, Modal } from 'react-native';
 import { Calendar, type DateData } from 'react-native-calendars';
 
 import { useMeasurements } from '@/hooks/useMeasurements';
@@ -19,6 +19,9 @@ type DayMarking = {
   selected?: boolean;
   selectedColor?: string;
 };
+
+// 「取消」「確定」只有文字很小，擴大可點範圍避免點偏
+const BUTTON_HIT_SLOP = { top: 12, bottom: 12, left: 12, right: 12 };
 
 function toMonthKey(d: Date): string {
   const y = d.getFullYear();
@@ -79,8 +82,10 @@ export function DataCalendarModal({ visible, selectedDate, themeColor, onConfirm
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide">
-      <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onCancel}>
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onCancel}>
+      <View style={styles.overlay}>
+        {/* 背景獨立一層、只鋪在月曆後面：月曆裡面點到空白處不會被當成「取消」 */}
+        <Pressable style={StyleSheet.absoluteFill} onPress={onCancel} testID="calendar-backdrop" />
         <View style={styles.sheet}>
           <View style={[styles.header, { backgroundColor: themeColor }]}>
             <Text style={styles.headerYear}>{tempDate.getFullYear()} 年</Text>
@@ -110,16 +115,21 @@ export function DataCalendarModal({ visible, selectedDate, themeColor, onConfirm
             }}
           />
 
-          <View style={styles.footer}>
-            <TouchableOpacity onPress={onCancel}>
+          <View style={styles.footer} testID="calendar-footer">
+            <TouchableOpacity onPress={onCancel} hitSlop={BUTTON_HIT_SLOP} style={styles.footerBtn}>
               <Text style={styles.cancelText}>取消</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => onConfirm(tempDate)}>
+            <TouchableOpacity
+              onPress={() => onConfirm(tempDate)}
+              hitSlop={BUTTON_HIT_SLOP}
+              style={styles.footerBtn}
+              testID="calendar-confirm"
+            >
               <Text style={[styles.confirmText, { color: themeColor }]}>確定</Text>
             </TouchableOpacity>
           </View>
         </View>
-      </TouchableOpacity>
+      </View>
     </Modal>
   );
 }
@@ -155,11 +165,15 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    gap: 24,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderTopWidth: 1,
     borderTopColor: '#F0F0F0',
+  },
+  footerBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
   },
   cancelText: {
     fontSize: 15,

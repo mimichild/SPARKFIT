@@ -23,6 +23,18 @@
 
 ## 工作階段日誌
 
+### 工作階段 030
+
+- 日期：2026-11-07
+- 本輪目標：修正「月曆選日期常常要按三四次才選到」
+- 已完成：
+  - 根因：`DataCalendarModal` 整個月曆面板包在 `TouchableOpacity(onPress=onCancel)` 背景裡，面板內非按鈕區域（日期格間空隙、「確定」文字旁空白）的點擊會冒泡到背景觸發取消，視窗關閉且選擇未套用；「確定」「取消」只有文字本身可點、無 hitSlop
+  - 修正：背景改為面板後方獨立的 `Pressable`（absoluteFill），面板內點擊不再冒泡成取消；「確定」「取消」加 padding＋hitSlop 擴大可點範圍；補 `onRequestClose`（Android 返回鍵關閉）
+  - 新增 `src/__tests__/components/DataCalendarModal.test.tsx`（先 Red 後 Green）
+- 執行過的驗證：`pnpm test`（108 passed）、`pnpm typecheck`
+- 已知風險或未解決問題：尚未在實機確認；尚未建置 APK
+- 下一步最佳動作：使用者要求時建置 APK
+
 ### 工作階段 029
 
 - 日期：2026-11-07
