@@ -11,6 +11,10 @@ import { useSettingsStore } from '@/stores/settingsStore';
 import { useMeasurements, type Measurement } from '@/hooks/useMeasurements';
 import { Colors } from '@/constants/colors';
 import { calcBmi, calcLeanMass, calcWaistHipRatio } from '@/utils/bodyMetrics';
+import {
+  diffWithExisting, mergeIntoExisting, isAutoWaistHipRatio, finalWaistHipRatio,
+  type DiffRow, type DailyFieldKey,
+} from '@/utils/measurementMerge';
 
 type FormData = {
   height: string;
@@ -56,6 +60,27 @@ const EMPTY_HIDDEN_FIELDS: HiddenFields = {
   recommended_calories: null,
 };
 
+// 每日欄位（資料庫欄位名）→ 表單欄位
+const FORM_KEY: Record<DailyFieldKey, keyof FormData> = {
+  weight: 'weight',
+  body_fat_rate: 'bodyFatRate',
+  visceral_fat: 'visceralFat',
+  waist_hip_ratio: 'waistHipRatio',
+  body_fat_weight: 'bodyFatWeight',
+  bmr: 'bmr',
+  chest: 'chest',
+  waist: 'waist',
+  low_waist: 'lowWaist',
+  hip: 'hip',
+  thigh: 'thigh',
+  calf: 'calf',
+  arm: 'arm',
+};
+
+function formatValue(n: number): string {
+  return String(n);
+}
+
 function toNum(s: string): number | null {
   const n = parseFloat(s.trim());
   return isNaN(n) ? null : n;
@@ -79,9 +104,19 @@ export default function AddDataScreen() {
   const { getMeasurement, saveMeasurement, deleteMeasurement } = useMeasurements();
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
   const [hiddenFields, setHiddenFields] = useState<HiddenFields>(EMPTY_HIDDEN_FIELDS);
+  // 這天在資料庫裡已有的紀錄（新增模式下用來判斷是否要詢問覆蓋）
+  const [existing, setExisting] = useState<Measurement | null>(null);
+  // null = 還沒詢問過；陣列 = 使用者選了「否」，正在逐項比對新舊資料
+  const [conflictRows, setConflictRows] = useState<DiffRow[] | null>(null);
+  const [choices, setChoices] = useState<Partial<Record<DailyFieldKey, 'old' | 'new'>>>({});
+  // 這天的舊資料載入完成前不允許儲存，避免整筆蓋掉舊紀錄
+  const [loaded, setLoaded] = useState(false);
 
   const loadData = useCallback(async () => {
+    // 基本資料直接讀當下的設定值：不能放進依賴，否則設定一改就會重新載入、清空表單
+    const { height, shoulderWidth, targetWeight } = useSettingsStore.getState();
     const m = await getMeasurement(date);
+    setExisting(m);
 
     setHiddenFields({
       bmi: m?.bmi ?? null,
@@ -100,7 +135,8 @@ export default function AddDataScreen() {
         weight: toStr(m?.weight),
         bodyFatRate: toStr(m?.body_fat_rate),
         visceralFat: toStr(m?.visceral_fat),
-        waistHipRatio: toStr(m?.waist_hip_ratio),
+        // 自動算出的腰臀比不放進輸入框，讓它隨腰圍/臀圍重新計算
+        waistHipRatio: m && !isAutoWaistHipRatio(m) ? toStr(m.waist_hip_ratio) : '',
         bodyFatWeight: toStr(m?.body_fat_weight),
         bmr: toStr(m?.bmr),
         chest: toStr(m?.chest),
@@ -119,7 +155,8 @@ export default function AddDataScreen() {
         targetWeight: toStr(targetWeight),
       });
     }
-  }, [mode, date, height, shoulderWidth, targetWeight, getMeasurement]);
+    setLoaded(true);
+  }, [mode, date, getMeasurement]);
 
   useEffect(() => {
     loadData();
@@ -133,15 +170,12 @@ export default function AddDataScreen() {
   const autoLeanMass = calcLeanMass(toNum(form.weight), toNum(form.bodyFatWeight), toNum(form.bodyFatRate));
 
   const handleSave = async () => {
+    if (!loaded) return;
     const newHeight = toNum(form.height);
     const newShoulderWidth = toNum(form.shoulderWidth);
     const newTargetWeight = toNum(form.targetWeight);
-    if (newHeight !== height) setHeight(newHeight);
-    if (newShoulderWidth !== shoulderWidth) setShoulderWidth(newShoulderWidth);
-    if (newTargetWeight !== targetWeight) setTargetWeight(newTargetWeight);
 
-    const { bmi: storedBmi, ...otherHiddenFields } = hiddenFields;
-    const m: Measurement = {
+    const entered: Measurement = {
       date,
       weight: toNum(form.weight),
       chest: toNum(form.chest),
@@ -151,18 +185,74 @@ export default function AddDataScreen() {
       thigh: toNum(form.thigh),
       calf: toNum(form.calf),
       arm: toNum(form.arm),
-      // 算不出來（沒身高或沒體重）時保留原本存的值，不要清空
-      bmi: calcBmi(toNum(form.weight), newHeight) ?? storedBmi,
       bmr: toNum(form.bmr),
       body_fat_rate: toNum(form.bodyFatRate),
       body_fat_weight: toNum(form.bodyFatWeight),
       visceral_fat: toNum(form.visceralFat),
       waist_hip_ratio: toNum(form.waistHipRatio),
-      ...otherHiddenFields,
+      ...EMPTY_HIDDEN_FIELDS,
     };
 
-    await saveMeasurement(m);
-    router.back();
+    const persist = async (base: Measurement | null) => {
+      const { bmi: storedBmi, ...otherHiddenFields } = hiddenFields;
+      // base 有值 = 合併到舊資料（只覆蓋有填的欄位）；沒有 = 整筆以表單為準
+      const m: Measurement = base
+        ? mergeIntoExisting(base, entered)
+        : { ...entered, ...otherHiddenFields };
+      m.waist_hip_ratio = finalWaistHipRatio(entered.waist_hip_ratio, base, m.waist, m.hip);
+      // 算不出來（沒身高或沒體重）時保留原本存的值，不要清空
+      m.bmi = calcBmi(m.weight, newHeight) ?? storedBmi;
+      try {
+        await saveMeasurement(m);
+      } catch {
+        Alert.alert('儲存失敗', '請再試一次。');
+        return;
+      }
+      // 真的存檔了才寫回基本資料（選「否」回去比對時不寫）
+      if (newHeight !== height) setHeight(newHeight);
+      if (newShoulderWidth !== shoulderWidth) setShoulderWidth(newShoulderWidth);
+      if (newTargetWeight !== targetWeight) setTargetWeight(newTargetWeight);
+      router.back();
+    };
+
+    if (mode !== 'add' || !existing) {
+      await persist(null);
+      return;
+    }
+
+    // 新增模式但這天已有紀錄：已逐項選好 → 直接合併；還沒問過 → 詢問是否覆蓋
+    if (conflictRows !== null) {
+      await persist(existing);
+      return;
+    }
+
+    Alert.alert(
+      '已有填寫資料',
+      '這天已經有紀錄了，請問要覆蓋舊資料嗎？\n（這次沒填的欄位會保留舊資料）',
+      [
+        {
+          text: '否',
+          style: 'cancel',
+          onPress: () => {
+            const rows = diffWithExisting(existing, entered);
+            setChoices(Object.fromEntries(rows.map(r => [r.key, 'new'])));
+            setConflictRows(rows);
+          },
+        },
+        { text: '是', onPress: () => { void persist(existing); } },
+      ],
+    );
+  };
+
+  const chooseValue = (row: DiffRow, which: 'old' | 'new') => {
+    setChoices(c => ({ ...c, [row.key]: which }));
+    // 舊的腰臀比是自動算的 → 清空輸入框，存檔時用目前的腰圍/臀圍重算，不要變成手填值
+    if (row.key === 'waist_hip_ratio' && which === 'old' && existing && isAutoWaistHipRatio(existing)) {
+      setForm(f => ({ ...f, waistHipRatio: '' }));
+      return;
+    }
+    const value = which === 'old' ? row.oldValue : row.newValue;
+    setForm(f => ({ ...f, [FORM_KEY[row.key]]: formatValue(value) }));
   };
 
   const handleDelete = () => {
@@ -200,7 +290,7 @@ export default function AddDataScreen() {
                 <Ionicons name="trash-outline" size={20} color="#FF6B8A" />
               </TouchableOpacity>
             )}
-            <TouchableOpacity onPress={handleSave} hitSlop={12}>
+            <TouchableOpacity onPress={handleSave} hitSlop={12} testID="save-btn">
               <Text style={[styles.headerSave, { color: themeColor }]}>儲存</Text>
             </TouchableOpacity>
           </View>
@@ -211,6 +301,49 @@ export default function AddDataScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
+          {conflictRows !== null && (
+            <View style={styles.conflictBox}>
+              <Text style={styles.conflictTitle}>這天已有資料</Text>
+              {conflictRows.length === 0 ? (
+                <Text style={styles.conflictText}>
+                  新舊資料沒有數字不同的欄位，按「儲存」會把這次新填的欄位補進去，舊資料都會保留。
+                </Text>
+              ) : (
+                <>
+                  <Text style={styles.conflictText}>
+                    以下欄位新舊數字不同，請選擇要保留哪一個，選好後按「儲存」。沒列出來的欄位：有填的會補進去，沒填的保留舊資料。
+                  </Text>
+                  {conflictRows.map(row => {
+                    const picked = choices[row.key] ?? 'new';
+                    return (
+                      <View key={row.key} style={styles.conflictRow} testID={`conflict-${row.key}`}>
+                        <Text style={styles.conflictLabel}>{row.label}</Text>
+                        <View style={styles.conflictChoices}>
+                          {(['old', 'new'] as const).map(which => {
+                            const active = picked === which;
+                            const value = which === 'old' ? row.oldValue : row.newValue;
+                            return (
+                              <TouchableOpacity
+                                key={which}
+                                onPress={() => chooseValue(row, which)}
+                                style={[styles.choiceChip, active && { backgroundColor: themeColor, borderColor: themeColor }]}
+                                testID={`conflict-${row.key}-${which}`}
+                              >
+                                <Text style={[styles.choiceText, active && styles.choiceTextActive]}>
+                                  {which === 'old' ? '舊' : '新'} {formatValue(value)}{row.unit ? ` ${row.unit}` : ''}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                      </View>
+                    );
+                  })}
+                </>
+              )}
+            </View>
+          )}
+
           <SectionHeader title="基本資料" subtitle="記錄一次即可" />
           <Field label="身高" value={form.height} onChange={set('height')} unit="cm" />
           <Field label="肩寬" value={form.shoulderWidth} onChange={set('shoulderWidth')} unit="cm" />
@@ -282,6 +415,7 @@ function Field({ label, value, onChange, unit, required, hint, placeholder }: Fi
       </View>
       <View style={styles.fieldRight}>
         <TextInput
+          testID={`field-${label}`}
           style={styles.fieldInput}
           value={value}
           onChangeText={onChange}
@@ -408,6 +542,55 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     minWidth: 80,
     padding: 0,
+  },
+  conflictBox: {
+    marginTop: 16,
+    padding: 14,
+    borderRadius: 12,
+    backgroundColor: '#FFF6F8',
+    borderWidth: 1,
+    borderColor: '#FFD6DF',
+    gap: 8,
+  },
+  conflictTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  conflictText: {
+    fontSize: 12,
+    lineHeight: 18,
+    color: Colors.textSecondary,
+  },
+  conflictRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 6,
+  },
+  conflictLabel: {
+    fontSize: 14,
+    color: Colors.textPrimary,
+  },
+  conflictChoices: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  choiceChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#DDDDDD',
+    backgroundColor: '#FFFFFF',
+  },
+  choiceText: {
+    fontSize: 13,
+    color: Colors.textPrimary,
+  },
+  choiceTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
   autoHint: {
     fontSize: 11,

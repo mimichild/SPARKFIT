@@ -264,6 +264,25 @@
         "2026-11-07 | pnpm test + pnpm typecheck | 追加腰臀比自動計算：先寫 4 個新測試確認 Red，實作後 8 suites / 69 tests 全過，tsc 無錯誤"
       ],
       "notes": "2026-11-07 使用者同意新增 SQLite 欄位 calf（ALTER TABLE，舊資料不受影響）；去脂體重選自動計算不加欄位；BMI 選全部用目前身高＋當日體重即時重算。移除的舊欄位（肌肉重、骨量、體年齡）資料保留在資料庫、儲存時原值帶回。 尚未在模擬器/實機目視確認畫面；2026-11-07 使用者追加：腰臀比預設由腰圍÷臀圍自動計算（小數 2 位，不寫入 DB），手填則以手填為準。既有問題（非本次造成）：首頁「＋」在當天已有紀錄時以 add 模式開啟空白表單，存檔會覆蓋當天畫面欄位。"
+    },
+    {
+      "id": "body-002",
+      "priority": 13,
+      "area": "app",
+      "title": "腰臀比自動值存入資料庫＋同日重複新增時詢問覆蓋並可逐項比對",
+      "user_visible_behavior": "腰臀比沒手填時自動以腰圍÷臀圍計算並存入資料庫；同一天已有紀錄時按「＋」儲存會跳出「已有填寫資料，請問要覆蓋舊資料嗎？」，選「是」只覆蓋有填的欄位、沒填的保留舊值；選「否」回到填寫頁，列出新舊數字不同的欄位，可逐項選舊或新後再儲存。",
+      "status": "passing",
+      "verification": [
+        "pnpm test 全部通過（含 measurementMerge 單元測試與 add-data 畫面存檔流程測試）。",
+        "pnpm typecheck 無錯誤。",
+        "./init.sh 基準驗證通過。"
+      ],
+      "evidence": [
+        "2026-11-07 | pnpm test | 先寫 measurementMerge.test.ts 確認 Red，實作後 Green；新增 src/__tests__/screens/addData.test.tsx 7 個畫面流程測試；最終 10 suites / 88 tests 全過",
+        "2026-11-07 | code-reviewer agent | HIGH：選「否」時若同時改了身高，設定寫回觸發重新載入清空表單 → 改為 loadData 讀 getState 且只在真正存檔後寫回設定；MEDIUM：載入前儲存會整筆覆蓋 → 加 loaded 旗標；MEDIUM：舊腰臀比為自動值時選「舊」會變手填 → 改為清空輸入框重算。三項皆先寫失敗測試再修",
+        "2026-11-07 | pnpm typecheck && ./init.sh | tsc 無錯誤，基準驗證通過"
+      ],
+      "notes": "使用者選「只覆蓋有填的欄位」（由 Claude 建議）。尚未在模擬器/實機目視確認畫面。"
     }
   ]
 }
