@@ -420,7 +420,7 @@ function Field({ label, value, onChange, unit, required, hint, placeholder }: Fi
           value={value}
           onChangeText={onChange}
           keyboardType="decimal-pad"
-          placeholder={placeholder ?? '──'}
+          placeholder={placeholder ?? '_'}
           placeholderTextColor={placeholder ? Colors.textSecondary : '#CCCCCC'}
           textAlign="right"
         />
@@ -438,8 +438,8 @@ function AutoField({ label, value, unit, hint }: { label: string; value: number 
         <Text style={styles.autoHint}>{hint}</Text>
       </View>
       <View style={styles.fieldRight}>
-        <Text style={[styles.fieldInput, styles.autoValue, value == null && styles.autoPlaceholder]}>
-          {value != null ? value.toFixed(1) : '──'}
+        <Text testID={`auto-${label}`} style={[styles.fieldInput, styles.autoValue, value == null && styles.autoPlaceholder]}>
+          {value != null ? value.toFixed(1) : '_'}
         </Text>
         {unit ? <Text style={styles.fieldUnit}>{unit}</Text> : null}
       </View>

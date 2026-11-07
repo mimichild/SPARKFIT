@@ -190,4 +190,13 @@ describe('AddDataScreen save flow', () => {
     await waitFor(() => expect(mockDb.runAsync).toHaveBeenCalled());
     expect(savedRow().waist_hip_ratio).toBe(0.78); // 72/92，不是寫死的 0.76
   });
+
+  it('shows "_" as the empty placeholder instead of a dash', async () => {
+    mockDb.getFirstAsync.mockResolvedValue(null);
+    const screen = render(<AddDataScreen />);
+    await waitFor(() => expect(mockDb.getFirstAsync).toHaveBeenCalled());
+
+    expect(screen.getByTestId('field-體脂肪量').props.placeholder).toBe('_');
+    expect(screen.getByTestId('auto-去脂體重').props.children).toBe('_');
+  });
 });

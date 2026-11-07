@@ -22,6 +22,18 @@
 
 ## 工作階段日誌
 
+### 工作階段 028
+
+- 日期：2026-11-07
+- 本輪目標：建置 Android APK 上傳 Google Drive；調查使用者回報「更新後舊資料不見」；新增數據頁空值顯示改為「_」
+- 已完成：
+  - 本地 release APK 建置：`rm -rf android && expo prebuild` 後 Gradle 因 `OutOfMemoryError: Metaspace` 卡住（預設 jvmargs -Xmx2048m / Metaspace 512m）；改 `android/gradle.properties` 為 `-Xmx4096m -XX:MaxMetaspaceSize=1536m` 後建置成功，上傳至 Drive `SPARK-Builds/SPARK SCALE/sparkscale-v1.0.0-20261107-1403-body-composition.apk`（新資料夾，舊 APK 在 `SPARKFIT/`）
+  - 資料遺失調查：程式碼端只有新增 calf 欄位，無刪除動作，DB 檔名 sparkfit.db 未變；根因判斷為 Android 套件 ID 變更——Drive `SPARKFIT/` 內舊 APK（最新 8/21）為 `com.sparkfit.app`，9/22 遷移後新 APK 為 `com.sparkscale.app`，Android 視為不同 App 另外安裝，新 App 為空白；舊資料應仍在舊 App 內（除非使用者已解除安裝舊 App）
+  - 新增數據/修改數據頁空值 placeholder 與自動計算欄位空值由「──」改為「_」（先寫失敗測試）
+- 執行過的驗證：`pnpm test`（89 passed）、`pnpm typecheck`；APK 上傳後確認 Drive item-id xattr 存在
+- 已知風險或未解決問題：等使用者確認手機上是否仍有舊 com.sparkfit.app；匯出備份需 Pro，若舊 App 無法匯出，可考慮以舊套件 ID + 同一 debug keystore 建置覆蓋更新舊 App 以取得匯出；`android/gradle.properties` 記憶體設定會在下次 prebuild 被覆蓋
+- 下一步最佳動作：依使用者回覆協助搬移舊資料；把 Gradle 記憶體設定寫入 app.json（expo-build-properties 或 config plugin）
+
 ### 工作階段 027
 
 - 日期：2026-11-07
