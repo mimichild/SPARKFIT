@@ -15,12 +15,28 @@
 - 2026-08-13：使用者要求把 App Store Connect 的繁體中文「App 資訊」名稱（App Store 上架顯示名稱）改為「SPARK FIT心動身形」（依使用者指定字串，FIT 與心動之間無空格），已在後台存檔成功；App 當時狀態為「正在等待審查」，純文案修改不影響排隊、不需重新提交，儲存後狀態仍維持「正在等待審查」
 - 2026-11-07：body-001 passing——身體組成改為體脂率／內臟脂肪等級／腰臀比／體脂肪量／去脂體重（自動算）／基礎代謝率／BMI（自動算），新增 calf（小腿圍）DB 欄位
 - 2026-11-07：body-002 passing——腰臀比自動值存 DB；同日重複新增會詢問覆蓋並可逐項比對新舊資料
+- 2026-11-07：body-003 passing——新增骨骼肌量、下胸圍（DB 欄位）、腰高比、FFMI（自動算），首頁數據 (?) 說明
 - 目前最高優先級未完成功能：無（下一輪從 feature_list.json 選下一個 not_started 功能；appstore-001 已 passing，等待 Apple 審查結果非我方可控）
 - 目前 blocker：無
 - 背景：Apple Developer Program 已生效（2026-07-20）；ios-001～ios-009、test-001 皆已 passing；App icon 加了描邊解決對比度偏軟問題並實機確認；已設定 EAS Update（OTA）支援；eas.json 補上 appVersionSource remote／autoIncrement／ascAppId；報告頁日期選擇器統一成跟數據頁一樣的月曆樣式；修好「清空紀錄仍在月曆顯示紅點」的資料查詢 bug；新增真正的刪除單日紀錄功能（垃圾桶圖示＋二次確認，iOS/Android 共用）
 - Android release APK 本地建置已知隱患：`android/`（gitignored、由 `expo prebuild` 產生）曾長期未跟著 `app.json` 更新重新生成，導致累積 3 個潛在問題（AdMob meta-data 缺失、splash 缺 image、`softwareKeyboardLayoutMode` 值不合法），已於工作階段 020 全部修掉並改成每次本地建置前先 `rm -rf android && npx expo prebuild --platform android` 再 `assembleRelease`，避免舊 native 專案殘留
 
 ## 工作階段日誌
+
+### 工作階段 029
+
+- 日期：2026-11-07
+- 本輪目標：body-003——新增骨骼肌量、下胸圍、腰高比、FFMI；首頁數據名稱加 (?) 說明
+- 已完成：
+  - 新增 SQLite 欄位 skeletal_muscle、underbust（DBProvider 改為 ADDED_COLUMNS 迴圈補欄位）；存檔、HAS_DATA_CONDITION、備份匯入、DAILY_FIELDS（同日合併/比對）皆納入
+  - bodyMetrics 新增 calcWaistHeightRatio（腰圍÷身高，2 位）、calcFfmi（去脂體重÷身高²，1 位），顯示時即時計算不存 DB
+  - 新增 `src/constants/metricInfo.ts`（首頁項目順序＋每項說明文字）、`src/components/MetricInfoModal.tsx`；MeasurementCard 加 onInfoPress 顯示灰色 (?)；首頁改由陣列渲染
+  - 新增數據頁、報告頁折線圖選項同步新增四項；新增數據空值顯示改為全形「＿」（工作階段 028 後追加）
+- 執行過的驗證：`pnpm test`（105 passed）、`pnpm typecheck`、`./init.sh`
+- 已擷取證據：見 feature_list.json body-003 evidence
+- 提交記錄：（見本輪 commit）
+- 已知風險或未解決問題：尚未在實機目視確認新版面與說明視窗；尚未重新建置 APK（含全形「＿」與本輪內容）
+- 下一步最佳動作：使用者要求時建置 APK 上傳 Drive `SPARK-Builds/SPARK SCALE/`
 
 ### 工作階段 028
 

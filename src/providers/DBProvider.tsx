@@ -3,6 +3,9 @@ import { SQLiteProvider, useSQLiteContext, type SQLiteDatabase } from 'expo-sqli
 
 import { DB_NAME } from '@/constants';
 
+// 初版之後才新增的欄位（只能往後加，不要改名或刪除）
+const ADDED_COLUMNS = ['calf', 'skeletal_muscle', 'underbust'] as const;
+
 export async function initDatabase(db: SQLiteDatabase): Promise<void> {
   await db.execAsync('PRAGMA journal_mode = WAL;');
   await db.execAsync(`
@@ -15,6 +18,8 @@ export async function initDatabase(db: SQLiteDatabase): Promise<void> {
       hip                 REAL,
       thigh               REAL,
       calf                REAL,
+      skeletal_muscle     REAL,
+      underbust           REAL,
       arm                 REAL,
       bmi                 REAL,
       bmr                 REAL,
@@ -30,10 +35,13 @@ export async function initDatabase(db: SQLiteDatabase): Promise<void> {
     );
   `);
 
-  // 舊版資料表沒有 calf（小腿圍），補欄位；既有資料不受影響
+  // 舊版資料表缺少的欄位逐一補上（小腿圍、骨骼肌量、下胸圍）；既有資料不受影響
   const columns = await db.getAllAsync<{ name: string }>('PRAGMA table_info(measurements)');
-  if (!columns.some(c => c.name === 'calf')) {
-    await db.execAsync('ALTER TABLE measurements ADD COLUMN calf REAL');
+  const existing = new Set(columns.map(c => c.name));
+  for (const col of ADDED_COLUMNS) {
+    if (!existing.has(col)) {
+      await db.execAsync(`ALTER TABLE measurements ADD COLUMN ${col} REAL`);
+    }
   }
 }
 

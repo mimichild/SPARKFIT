@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Colors } from '@/constants/colors';
 
 type Props = {
@@ -7,14 +7,23 @@ type Props = {
   unit: string;
   valueColor?: string;
   decimals?: number;
+  /** 有傳入時，名稱旁顯示灰色 (?)，點擊呼叫 */
+  onInfoPress?: () => void;
 };
 
-export function MeasurementCard({ label, value, unit, valueColor, decimals = 1 }: Props) {
+export function MeasurementCard({ label, value, unit, valueColor, decimals = 1, onInfoPress }: Props) {
   const hasValue = value !== null;
 
   return (
     <View style={styles.card}>
-      <Text style={styles.label}>{label}</Text>
+      <View style={styles.labelRow}>
+        <Text style={styles.label}>{label}</Text>
+        {onInfoPress ? (
+          <TouchableOpacity onPress={onInfoPress} hitSlop={10} testID={`info-${label}`}>
+            <Text style={styles.info}>(?)</Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
       <Text style={[
         styles.value,
         !hasValue && styles.valuePlaceholder,
@@ -43,11 +52,20 @@ const styles = StyleSheet.create({
     minHeight: 90,
     justifyContent: 'center',
   },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    marginBottom: 8,
+  },
   label: {
     fontSize: 13,
     color: Colors.textSecondary,
     fontWeight: '500',
-    marginBottom: 8,
+  },
+  info: {
+    fontSize: 11,
+    color: '#B5B5B5',
   },
   value: {
     fontSize: 22,

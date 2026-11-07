@@ -21,7 +21,7 @@ const mockDb = useSQLiteContext() as unknown as {
 const EXISTING = {
   date: '2026-11-07',
   weight: 62, chest: null, waist: 70, low_waist: null, hip: 92,
-  thigh: null, calf: null, arm: null, bmi: 22.8, bmr: null, body_fat_rate: 25,
+  thigh: null, calf: null, skeletal_muscle: null, underbust: null, arm: null, bmi: 22.8, bmr: null, body_fat_rate: 25,
   body_fat_weight: null, muscle_weight: 40, bone_weight: 2.5,
   visceral_fat: null, body_age: 30, waist_hip_ratio: 0.76,
   obesity_degree: null, recommended_calories: null,
@@ -30,7 +30,8 @@ const EXISTING = {
 // 存進資料庫的參數順序（見 useMeasurements.saveMeasurement）
 const COLS = ['date', 'weight', 'chest', 'waist', 'low_waist', 'hip', 'thigh', 'arm',
   'bmi', 'bmr', 'body_fat_rate', 'body_fat_weight', 'muscle_weight', 'bone_weight',
-  'visceral_fat', 'body_age', 'waist_hip_ratio', 'obesity_degree', 'recommended_calories', 'calf'];
+  'visceral_fat', 'body_age', 'waist_hip_ratio', 'obesity_degree', 'recommended_calories', 'calf',
+  'skeletal_muscle', 'underbust'];
 
 function savedRow(): Record<string, unknown> {
   const params = mockDb.runAsync.mock.calls[0][1] as unknown[];
@@ -198,5 +199,41 @@ describe('AddDataScreen save flow', () => {
 
     expect(screen.getByTestId('field-體脂肪量').props.placeholder).toBe('＿');
     expect(screen.getByTestId('auto-去脂體重').props.children).toBe('＿');
+  });
+
+  it('saves skeletal muscle and underbust', async () => {
+    mockDb.getFirstAsync.mockResolvedValue(null);
+    const screen = render(<AddDataScreen />);
+    await waitFor(() => expect(mockDb.getFirstAsync).toHaveBeenCalled());
+
+    fireEvent.changeText(screen.getByTestId('field-骨骼肌量'), '22.5');
+    fireEvent.changeText(screen.getByTestId('field-下胸圍'), '70');
+    fireEvent.press(screen.getByTestId('save-btn'));
+
+    await waitFor(() => expect(mockDb.runAsync).toHaveBeenCalled());
+    expect(savedRow().skeletal_muscle).toBe(22.5);
+    expect(savedRow().underbust).toBe(70);
+  });
+
+  it('shows auto-computed waist-to-height ratio and FFMI', async () => {
+    mockDb.getFirstAsync.mockResolvedValue(null);
+    const screen = render(<AddDataScreen />);
+    await waitFor(() => expect(mockDb.getFirstAsync).toHaveBeenCalled());
+
+    fireEvent.changeText(screen.getByTestId('field-體重'), '60');
+    fireEvent.changeText(screen.getByTestId('field-體脂肪量'), '15');
+    fireEvent.changeText(screen.getByTestId('field-腰圍'), '70');
+
+    expect(screen.getByTestId('auto-腰高比').props.children).toBe('0.42'); // 70/165
+    expect(screen.getByTestId('auto-FFMI').props.children).toBe('16.5');   // 45/1.65^2
+  });
+
+  it('edit mode loads existing skeletal muscle and underbust', async () => {
+    mockParams.mode = 'edit';
+    mockDb.getFirstAsync.mockResolvedValue({ ...EXISTING, skeletal_muscle: 22.5, underbust: 70 });
+    const screen = render(<AddDataScreen />);
+
+    await waitFor(() => expect(screen.getByTestId('field-骨骼肌量').props.value).toBe('22.5'));
+    expect(screen.getByTestId('field-下胸圍').props.value).toBe('70');
   });
 });

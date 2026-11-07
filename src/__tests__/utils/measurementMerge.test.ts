@@ -10,7 +10,7 @@ function makeMeasurement(overrides: Partial<Measurement> = {}): Measurement {
   return {
     date: '2026-11-07',
     weight: null, chest: null, waist: null, low_waist: null, hip: null,
-    thigh: null, calf: null, arm: null, bmi: null, bmr: null, body_fat_rate: null,
+    thigh: null, calf: null, skeletal_muscle: null, underbust: null, arm: null, bmi: null, bmr: null, body_fat_rate: null,
     body_fat_weight: null, muscle_weight: null, bone_weight: null,
     visceral_fat: null, body_age: null, waist_hip_ratio: null,
     obesity_degree: null, recommended_calories: null,
@@ -55,6 +55,15 @@ describe('mergeIntoExisting', () => {
     expect(merged.body_fat_rate).toBe(25);
     expect(merged.calf).toBe(34);
     expect(merged.muscle_weight).toBe(40);
+  });
+});
+
+describe('mergeIntoExisting with new fields', () => {
+  it('keeps old skeletal_muscle / underbust when left blank, overwrites when filled', () => {
+    const existing = makeMeasurement({ skeletal_muscle: 22, underbust: 72 });
+    const merged = mergeIntoExisting(existing, makeMeasurement({ underbust: 70 }));
+    expect(merged.skeletal_muscle).toBe(22);
+    expect(merged.underbust).toBe(70);
   });
 });
 

@@ -10,7 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useMeasurements, type Measurement } from '@/hooks/useMeasurements';
 import { Colors } from '@/constants/colors';
-import { calcBmi, calcLeanMass, calcWaistHipRatio } from '@/utils/bodyMetrics';
+import { calcBmi, calcLeanMass, calcWaistHipRatio, calcWaistHeightRatio, calcFfmi } from '@/utils/bodyMetrics';
 import {
   diffWithExisting, mergeIntoExisting, isAutoWaistHipRatio, finalWaistHipRatio,
   type DiffRow, type DailyFieldKey,
@@ -21,12 +21,14 @@ type FormData = {
   shoulderWidth: string;
   targetWeight: string;
   weight: string;
+  skeletalMuscle: string;
   bodyFatRate: string;
   visceralFat: string;
   waistHipRatio: string;
   bodyFatWeight: string;
   bmr: string;
   chest: string;
+  underbust: string;
   waist: string;
   lowWaist: string;
   hip: string;
@@ -37,8 +39,8 @@ type FormData = {
 
 const EMPTY_FORM: FormData = {
   height: '', shoulderWidth: '', targetWeight: '', weight: '',
-  bodyFatRate: '', visceralFat: '', waistHipRatio: '', bodyFatWeight: '', bmr: '',
-  chest: '', waist: '', lowWaist: '', hip: '', thigh: '', calf: '', arm: '',
+  skeletalMuscle: '', bodyFatRate: '', visceralFat: '', waistHipRatio: '', bodyFatWeight: '', bmr: '',
+  chest: '', underbust: '', waist: '', lowWaist: '', hip: '', thigh: '', calf: '', arm: '',
 };
 
 // 已從畫面上移除，但仍需在儲存時原封不動帶回去，避免清空使用者手機上的舊資料
@@ -63,12 +65,14 @@ const EMPTY_HIDDEN_FIELDS: HiddenFields = {
 // 每日欄位（資料庫欄位名）→ 表單欄位
 const FORM_KEY: Record<DailyFieldKey, keyof FormData> = {
   weight: 'weight',
+  skeletal_muscle: 'skeletalMuscle',
   body_fat_rate: 'bodyFatRate',
   visceral_fat: 'visceralFat',
   waist_hip_ratio: 'waistHipRatio',
   body_fat_weight: 'bodyFatWeight',
   bmr: 'bmr',
   chest: 'chest',
+  underbust: 'underbust',
   waist: 'waist',
   low_waist: 'lowWaist',
   hip: 'hip',
@@ -133,6 +137,7 @@ export default function AddDataScreen() {
         shoulderWidth: toStr(shoulderWidth),
         targetWeight: toStr(targetWeight),
         weight: toStr(m?.weight),
+        skeletalMuscle: toStr(m?.skeletal_muscle),
         bodyFatRate: toStr(m?.body_fat_rate),
         visceralFat: toStr(m?.visceral_fat),
         // 自動算出的腰臀比不放進輸入框，讓它隨腰圍/臀圍重新計算
@@ -140,6 +145,7 @@ export default function AddDataScreen() {
         bodyFatWeight: toStr(m?.body_fat_weight),
         bmr: toStr(m?.bmr),
         chest: toStr(m?.chest),
+        underbust: toStr(m?.underbust),
         waist: toStr(m?.waist),
         lowWaist: toStr(m?.low_waist),
         hip: toStr(m?.hip),
@@ -168,6 +174,8 @@ export default function AddDataScreen() {
   const autoBmi = calcBmi(toNum(form.weight), toNum(form.height));
   const autoWaistHipRatio = calcWaistHipRatio(toNum(form.waist), toNum(form.hip));
   const autoLeanMass = calcLeanMass(toNum(form.weight), toNum(form.bodyFatWeight), toNum(form.bodyFatRate));
+  const autoWaistHeightRatio = calcWaistHeightRatio(toNum(form.waist), toNum(form.height));
+  const autoFfmi = calcFfmi(autoLeanMass, toNum(form.height));
 
   const handleSave = async () => {
     if (!loaded) return;
@@ -178,7 +186,9 @@ export default function AddDataScreen() {
     const entered: Measurement = {
       date,
       weight: toNum(form.weight),
+      skeletal_muscle: toNum(form.skeletalMuscle),
       chest: toNum(form.chest),
+      underbust: toNum(form.underbust),
       waist: toNum(form.waist),
       low_waist: toNum(form.lowWaist),
       hip: toNum(form.hip),
@@ -351,6 +361,7 @@ export default function AddDataScreen() {
 
           <SectionHeader title="身體組成" />
           <Field label="體重" value={form.weight} onChange={set('weight')} unit="kg" />
+          <Field label="骨骼肌量" value={form.skeletalMuscle} onChange={set('skeletalMuscle')} unit="kg" />
           <Field label="體脂率" value={form.bodyFatRate} onChange={set('bodyFatRate')} unit="%" />
           <Field label="內臟脂肪等級" value={form.visceralFat} onChange={set('visceralFat')} unit="" />
           <Field
@@ -361,13 +372,16 @@ export default function AddDataScreen() {
             hint="空白則用腰圍÷臀圍自動算"
             placeholder={autoWaistHipRatio != null ? autoWaistHipRatio.toFixed(2) : undefined}
           />
+          <AutoField label="腰高比" value={autoWaistHeightRatio} unit="" hint="腰圍÷身高" decimals={2} />
           <Field label="體脂肪量" value={form.bodyFatWeight} onChange={set('bodyFatWeight')} unit="kg" />
-          <AutoField label="去脂體重" value={autoLeanMass} unit="kg" hint="體重 − 體脂肪量" />
+          <AutoField label="去脂體重" value={autoLeanMass} unit="kg" hint="體重−體脂肪量（或用體脂率推算）" />
           <Field label="基礎代謝率" value={form.bmr} onChange={set('bmr')} unit="kcal" />
           <AutoField label="BMI" value={autoBmi} unit="" hint="由身高、體重計算" />
+          <AutoField label="FFMI" value={autoFfmi} unit="" hint="去脂體重÷身高²" />
 
           <SectionHeader title="身體尺寸" />
           <Field label="胸圍" value={form.chest} onChange={set('chest')} unit="cm" />
+          <Field label="下胸圍" value={form.underbust} onChange={set('underbust')} unit="cm" />
           <Field label="腰圍" value={form.waist} onChange={set('waist')} unit="cm" />
           <Field label="低腰圍" value={form.lowWaist} onChange={set('lowWaist')} unit="cm" />
           <Field label="臀圍" value={form.hip} onChange={set('hip')} unit="cm" />
@@ -430,7 +444,7 @@ function Field({ label, value, onChange, unit, required, hint, placeholder }: Fi
   );
 }
 
-function AutoField({ label, value, unit, hint }: { label: string; value: number | null; unit: string; hint: string }) {
+function AutoField({ label, value, unit, hint, decimals = 1 }: { label: string; value: number | null; unit: string; hint: string; decimals?: number }) {
   return (
     <View style={styles.fieldRow}>
       <View style={styles.fieldLeft}>
@@ -439,7 +453,7 @@ function AutoField({ label, value, unit, hint }: { label: string; value: number 
       </View>
       <View style={styles.fieldRight}>
         <Text testID={`auto-${label}`} style={[styles.fieldInput, styles.autoValue, value == null && styles.autoPlaceholder]}>
-          {value != null ? value.toFixed(1) : '＿'}
+          {value != null ? value.toFixed(decimals) : '＿'}
         </Text>
         {unit ? <Text style={styles.fieldUnit}>{unit}</Text> : null}
       </View>

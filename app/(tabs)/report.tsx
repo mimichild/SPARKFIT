@@ -27,14 +27,18 @@ type MetricKey = keyof Omit<DerivedMeasurement, 'date'>;
 
 const METRICS: { key: MetricKey; label: string; unit: string; decimals?: number }[] = [
   { key: 'weight',        label: '體重',      unit: 'kg'   },
+  { key: 'skeletal_muscle', label: '骨骼肌量',     unit: 'kg'   },
   { key: 'body_fat_rate',   label: '體脂率',       unit: '%'    },
   { key: 'visceral_fat',    label: '內臟脂肪等級', unit: ''     },
   { key: 'waist_hip_ratio', label: '腰臀比',       unit: '', decimals: 2 },
+  { key: 'waist_height_ratio', label: '腰高比',    unit: '', decimals: 2 },
   { key: 'body_fat_weight', label: '體脂肪量',     unit: 'kg'   },
   { key: 'lean_mass',       label: '去脂體重',     unit: 'kg'   },
   { key: 'bmr',             label: '基礎代謝率',   unit: 'kcal' },
   { key: 'bmi',             label: 'BMI',          unit: ''     },
+  { key: 'ffmi',            label: 'FFMI',         unit: ''     },
   { key: 'chest',         label: '胸圍',      unit: 'cm'   },
+  { key: 'underbust',     label: '下胸圍',    unit: 'cm'   },
   { key: 'waist',         label: '腰圍',      unit: 'cm'   },
   { key: 'low_waist',     label: '低腰圍',    unit: 'cm'   },
   { key: 'hip',           label: '臀圍',      unit: 'cm'   },

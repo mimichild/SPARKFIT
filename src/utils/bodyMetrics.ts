@@ -1,6 +1,10 @@
 import type { Measurement } from '@/hooks/useMeasurements';
 
-export type DerivedMeasurement = Measurement & { lean_mass: number | null };
+export type DerivedMeasurement = Measurement & {
+  lean_mass: number | null;
+  waist_height_ratio: number | null;
+  ffmi: number | null;
+};
 
 function round1(n: number): number {
   return Math.round(n * 10) / 10;
@@ -33,12 +37,28 @@ export function calcWaistHipRatio(waistCm: number | null, hipCm: number | null):
   return Math.round((waistCm / hipCm) * 100) / 100;
 }
 
-/** 顯示用：BMI 一律用目前身高重算，並補上去脂體重、腰臀比。 */
+/** 腰高比 = 腰圍 / 身高，四捨五入到小數 2 位。 */
+export function calcWaistHeightRatio(waistCm: number | null, heightCm: number | null): number | null {
+  if (waistCm == null || heightCm == null || waistCm <= 0 || heightCm <= 0) return null;
+  return Math.round((waistCm / heightCm) * 100) / 100;
+}
+
+/** FFMI（去脂體重指數）= 去脂體重(kg) / 身高(m)^2，四捨五入到小數 1 位。 */
+export function calcFfmi(leanMassKg: number | null, heightCm: number | null): number | null {
+  if (leanMassKg == null || heightCm == null || leanMassKg <= 0 || heightCm <= 0) return null;
+  const m = heightCm / 100;
+  return round1(leanMassKg / (m * m));
+}
+
+/** 顯示用：BMI 一律用目前身高重算，並補上去脂體重、腰臀比、腰高比、FFMI。 */
 export function withDerivedMetrics(m: Measurement, heightCm: number | null): DerivedMeasurement {
+  const leanMass = calcLeanMass(m.weight, m.body_fat_weight, m.body_fat_rate);
   return {
     ...m,
     bmi: calcBmi(m.weight, heightCm),
-    lean_mass: calcLeanMass(m.weight, m.body_fat_weight, m.body_fat_rate),
+    lean_mass: leanMass,
+    waist_height_ratio: calcWaistHeightRatio(m.waist, heightCm),
+    ffmi: calcFfmi(leanMass, heightCm),
     // 有手填用手填，否則由腰圍/臀圍自動計算（自動值不寫入資料庫，腰臀圍改了會跟著變）
     waist_hip_ratio: m.waist_hip_ratio ?? calcWaistHipRatio(m.waist, m.hip),
   };

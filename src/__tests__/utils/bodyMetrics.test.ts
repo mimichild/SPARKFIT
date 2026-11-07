@@ -1,11 +1,11 @@
-import { calcBmi, calcLeanMass, calcWaistHipRatio, withDerivedMetrics } from '@/utils/bodyMetrics';
+import { calcBmi, calcLeanMass, calcWaistHipRatio, calcWaistHeightRatio, calcFfmi, withDerivedMetrics } from '@/utils/bodyMetrics';
 import type { Measurement } from '@/hooks/useMeasurements';
 
 function makeMeasurement(overrides: Partial<Measurement> = {}): Measurement {
   return {
     date: '2026-11-07',
     weight: null, chest: null, waist: null, low_waist: null, hip: null,
-    thigh: null, calf: null, arm: null, bmi: null, bmr: null, body_fat_rate: null,
+    thigh: null, calf: null, skeletal_muscle: null, underbust: null, arm: null, bmi: null, bmr: null, body_fat_rate: null,
     body_fat_weight: null, muscle_weight: null, bone_weight: null,
     visceral_fat: null, body_age: null, waist_hip_ratio: null,
     obesity_degree: null, recommended_calories: null,
@@ -73,7 +73,39 @@ describe('calcWaistHipRatio', () => {
   });
 });
 
+describe('calcWaistHeightRatio', () => {
+  it('computes waist / height rounded to 2 decimals', () => {
+    // 70 / 165 = 0.4242...
+    expect(calcWaistHeightRatio(70, 165)).toBe(0.42);
+  });
+
+  it('returns null when waist or height is missing or non-positive', () => {
+    expect(calcWaistHeightRatio(null, 165)).toBeNull();
+    expect(calcWaistHeightRatio(70, null)).toBeNull();
+    expect(calcWaistHeightRatio(70, 0)).toBeNull();
+  });
+});
+
+describe('calcFfmi', () => {
+  it('computes lean mass / height(m)^2 rounded to 1 decimal', () => {
+    // 45 / 1.65^2 = 16.528...
+    expect(calcFfmi(45, 165)).toBe(16.5);
+  });
+
+  it('returns null when lean mass or height is missing', () => {
+    expect(calcFfmi(null, 165)).toBeNull();
+    expect(calcFfmi(45, null)).toBeNull();
+  });
+});
+
 describe('withDerivedMetrics', () => {
+  it('adds waist_height_ratio and ffmi', () => {
+    const m = makeMeasurement({ weight: 60, body_fat_weight: 15, waist: 70 });
+    const d = withDerivedMetrics(m, 165);
+    expect(d.waist_height_ratio).toBe(0.42);
+    expect(d.ffmi).toBe(16.5);
+  });
+
   it('auto-computes waist_hip_ratio from waist/hip when not entered manually', () => {
     const m = makeMeasurement({ waist: 70, hip: 92, waist_hip_ratio: null });
     expect(withDerivedMetrics(m, null).waist_hip_ratio).toBe(0.76);

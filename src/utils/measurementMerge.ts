@@ -4,12 +4,14 @@ import { calcWaistHipRatio } from '@/utils/bodyMetrics';
 /** 新增數據頁上「每天記錄」的欄位（不含身高等基本資料、不含已隱藏的舊欄位）。 */
 export const DAILY_FIELDS = [
   { key: 'weight',          label: '體重',         unit: 'kg'   },
+  { key: 'skeletal_muscle', label: '骨骼肌量',     unit: 'kg'   },
   { key: 'body_fat_rate',   label: '體脂率',       unit: '%'    },
   { key: 'visceral_fat',    label: '內臟脂肪等級', unit: ''     },
   { key: 'waist_hip_ratio', label: '腰臀比',       unit: ''     },
   { key: 'body_fat_weight', label: '體脂肪量',     unit: 'kg'   },
   { key: 'bmr',             label: '基礎代謝率',   unit: 'kcal' },
   { key: 'chest',           label: '胸圍',         unit: 'cm'   },
+  { key: 'underbust',       label: '下胸圍',       unit: 'cm'   },
   { key: 'waist',           label: '腰圍',         unit: 'cm'   },
   { key: 'low_waist',       label: '低腰圍',       unit: 'cm'   },
   { key: 'hip',             label: '臀圍',         unit: 'cm'   },

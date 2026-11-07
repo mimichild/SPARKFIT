@@ -12,7 +12,7 @@ function makeMeasurement(overrides: Partial<Measurement> = {}): Measurement {
   return {
     date: '2026-07-20',
     weight: 60, chest: null, waist: null, low_waist: null, hip: null,
-    thigh: null, calf: null, arm: null, bmi: null, bmr: null, body_fat_rate: null,
+    thigh: null, calf: null, skeletal_muscle: null, underbust: null, arm: null, bmi: null, bmr: null, body_fat_rate: null,
     body_fat_weight: null, muscle_weight: null, bone_weight: null,
     visceral_fat: null, body_age: null, waist_hip_ratio: null,
     obesity_degree: null, recommended_calories: null,
@@ -76,6 +76,7 @@ describe('useMeasurements', () => {
           m.bmi, m.bmr, m.body_fat_rate, m.body_fat_weight, m.muscle_weight,
           m.bone_weight, m.visceral_fat, m.body_age, m.waist_hip_ratio,
           m.obesity_degree, m.recommended_calories, m.calf,
+          m.skeletal_muscle, m.underbust,
         ],
       );
     });
@@ -87,8 +88,8 @@ describe('useMeasurements', () => {
       await result.current.saveMeasurement(m);
 
       const [sql, params] = mockDb.runAsync.mock.calls[0];
-      expect(sql).toMatch(/recommended_calories, calf\)/);
-      expect(params[params.length - 1]).toBe(34.5);
+      expect(sql).toMatch(/recommended_calories, calf, skeletal_muscle, underbust\)/);
+      expect(params[19]).toBe(34.5);
     });
   });
 
@@ -98,7 +99,10 @@ describe('useMeasurements', () => {
 
     await result.current.getMeasurement('2026-07-20');
 
-    expect(mockDb.getFirstAsync.mock.calls[0][0]).toContain('calf IS NOT NULL');
+    const sql = mockDb.getFirstAsync.mock.calls[0][0];
+    expect(sql).toContain('calf IS NOT NULL');
+    expect(sql).toContain('skeletal_muscle IS NOT NULL');
+    expect(sql).toContain('underbust IS NOT NULL');
   });
 
   describe('getMeasurements', () => {

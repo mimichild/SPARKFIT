@@ -17,6 +17,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
 import { toDateKey, formatDate } from '@/utils/date';
 import { withDerivedMetrics } from '@/utils/bodyMetrics';
+import { MetricInfoModal } from '@/components/MetricInfoModal';
+import {
+  METRIC_INFO, HOME_COMPOSITION_METRICS, HOME_SIZE_METRICS, type HomeMetric,
+} from '@/constants/metricInfo';
+
+/** 兩個一列排版 */
+function pairs<T>(items: T[]): T[][] {
+  const rows: T[][] = [];
+  for (let i = 0; i < items.length; i += 2) rows.push(items.slice(i, i + 2));
+  return rows;
+}
 
 function isEmptyMeasurement(m: Measurement): boolean {
   return Object.entries(m).every(([key, value]) => key === 'date' || value == null);
@@ -39,6 +50,7 @@ export default function DataScreen() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
   const [measurement, setMeasurement] = useState<Measurement | null>(null);
+  const [infoKey, setInfoKey] = useState<string | null>(null);
 
   const { getMeasurement, getLatestMeasurement } = useMeasurements();
   const dateKey = toDateKey(selectedDate);
@@ -69,6 +81,24 @@ export default function DataScreen() {
   const w = measurement?.weight ?? null;
   const d = measurement ? withDerivedMetrics(measurement, height) : null;
 
+  const renderMetricRows = (metrics: HomeMetric[]) =>
+    pairs(metrics).map(row => (
+      <View style={styles.grid} key={row[0].key}>
+        {row.map(({ key, label, unit, decimals }) => (
+          <MeasurementCard
+            key={key}
+            label={label}
+            value={(d?.[key] as number | null | undefined) ?? null}
+            unit={unit}
+            decimals={decimals}
+            valueColor={themeColor}
+            onInfoPress={() => setInfoKey(key)}
+          />
+        ))}
+        {row.length === 1 && <View style={{ flex: 1, margin: 4 }} />}
+      </View>
+    ));
+
   return (
     <View style={{ flex: 1 }}>
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
@@ -98,7 +128,12 @@ export default function DataScreen() {
 
         {/* ── 體重 Hero ── */}
         <View style={[styles.heroCard, { backgroundColor: themeColor }]}>
-          <Text style={styles.heroLabel}>目前體重</Text>
+          <View style={styles.heroLabelRow}>
+            <Text style={styles.heroLabel}>目前體重</Text>
+            <TouchableOpacity onPress={() => setInfoKey('weight')} hitSlop={10} testID="info-目前體重">
+              <Text style={styles.heroInfo}>(?)</Text>
+            </TouchableOpacity>
+          </View>
           <View style={styles.heroValueRow}>
             <Text style={styles.heroValue}>{w != null ? w.toFixed(1) : '──'}</Text>
             <Text style={styles.heroUnit}>kg</Text>
@@ -113,44 +148,20 @@ export default function DataScreen() {
 
         {/* ── 身體組成 ── */}
         <Text style={styles.sectionTitle}>身體組成</Text>
-        <View style={styles.grid}>
-          <MeasurementCard label="體脂率" value={d?.body_fat_rate ?? null} unit="%" valueColor={themeColor} />
-          <MeasurementCard label="內臟脂肪等級" value={d?.visceral_fat ?? null} unit="" valueColor={themeColor} />
-        </View>
-        <View style={styles.grid}>
-          <MeasurementCard label="腰臀比" value={d?.waist_hip_ratio ?? null} unit="" valueColor={themeColor} decimals={2} />
-          <MeasurementCard label="體脂肪量" value={d?.body_fat_weight ?? null} unit="kg" valueColor={themeColor} />
-        </View>
-        <View style={styles.grid}>
-          <MeasurementCard label="去脂體重" value={d?.lean_mass ?? null} unit="kg" valueColor={themeColor} />
-          <MeasurementCard label="基礎代謝率" value={d?.bmr ?? null} unit="kcal" valueColor={themeColor} />
-        </View>
-        <View style={styles.grid}>
-          <MeasurementCard label="BMI" value={d?.bmi ?? null} unit="" valueColor={themeColor} />
-          <View style={{ flex: 1, margin: 4 }} />
-        </View>
+        {renderMetricRows(HOME_COMPOSITION_METRICS)}
 
         {/* ── 身體尺寸 ── */}
         <Text style={styles.sectionTitle}>身體尺寸</Text>
-        <View style={styles.grid}>
-          <MeasurementCard label="胸圍" value={d?.chest ?? null} unit="cm" valueColor={themeColor} />
-          <MeasurementCard label="腰圍" value={d?.waist ?? null} unit="cm" valueColor={themeColor} />
-        </View>
-        <View style={styles.grid}>
-          <MeasurementCard label="低腰圍" value={d?.low_waist ?? null} unit="cm" valueColor={themeColor} />
-          <MeasurementCard label="臀圍" value={d?.hip ?? null} unit="cm" valueColor={themeColor} />
-        </View>
-        <View style={styles.grid}>
-          <MeasurementCard label="大腿圍" value={d?.thigh ?? null} unit="cm" valueColor={themeColor} />
-          <MeasurementCard label="小腿圍" value={d?.calf ?? null} unit="cm" valueColor={themeColor} />
-        </View>
-        <View style={styles.grid}>
-          <MeasurementCard label="手臂圍" value={d?.arm ?? null} unit="cm" valueColor={themeColor} />
-          <View style={{ flex: 1, margin: 4 }} />
-        </View>
+        {renderMetricRows(HOME_SIZE_METRICS)}
 
         <View style={{ height: 100 }} />
       </ScrollView>
+
+      <MetricInfoModal
+        info={infoKey ? METRIC_INFO[infoKey] ?? null : null}
+        onClose={() => setInfoKey(null)}
+        themeColor={themeColor}
+      />
 
       {/* ── 日期選擇月曆 ── */}
       <DataCalendarModal
@@ -234,12 +245,22 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 4,
   },
+  heroLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 8,
+  },
   heroLabel: {
     fontSize: 13,
     color: '#FFFFFF',
     opacity: 0.9,
     fontWeight: '500',
-    marginBottom: 8,
+  },
+  heroInfo: {
+    fontSize: 11,
+    color: '#FFFFFF',
+    opacity: 0.7,
   },
   heroValueRow: {
     flexDirection: 'row',

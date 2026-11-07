@@ -15,10 +15,21 @@ describe('initDatabase', () => {
 
     expect(db.getAllAsync).toHaveBeenCalledWith('PRAGMA table_info(measurements)');
     expect(db.execAsync).toHaveBeenCalledWith('ALTER TABLE measurements ADD COLUMN calf REAL');
+    expect(db.execAsync).toHaveBeenCalledWith('ALTER TABLE measurements ADD COLUMN skeletal_muscle REAL');
+    expect(db.execAsync).toHaveBeenCalledWith('ALTER TABLE measurements ADD COLUMN underbust REAL');
+  });
+
+  it('adds only the columns that are missing', async () => {
+    const db = makeDb(['date', 'weight', 'calf']);
+
+    await initDatabase(db as never);
+
+    expect(db.execAsync).not.toHaveBeenCalledWith('ALTER TABLE measurements ADD COLUMN calf REAL');
+    expect(db.execAsync).toHaveBeenCalledWith('ALTER TABLE measurements ADD COLUMN skeletal_muscle REAL');
   });
 
   it('does not alter the table when calf already exists', async () => {
-    const db = makeDb(['date', 'weight', 'thigh', 'calf', 'arm']);
+    const db = makeDb(['date', 'weight', 'thigh', 'calf', 'skeletal_muscle', 'underbust', 'arm']);
 
     await initDatabase(db as never);
 
@@ -32,5 +43,7 @@ describe('initDatabase', () => {
 
     const createSql = db.execAsync.mock.calls.map(c => c[0]).find((s: string) => s.includes('CREATE TABLE'));
     expect(createSql).toMatch(/calf\s+REAL/);
+    expect(createSql).toMatch(/skeletal_muscle\s+REAL/);
+    expect(createSql).toMatch(/underbust\s+REAL/);
   });
 });

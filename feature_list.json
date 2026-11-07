@@ -283,6 +283,26 @@
         "2026-11-07 | pnpm typecheck && ./init.sh | tsc 無錯誤，基準驗證通過"
       ],
       "notes": "使用者選「只覆蓋有填的欄位」（由 Claude 建議）。尚未在模擬器/實機目視確認畫面。"
+    },
+    {
+      "id": "body-003",
+      "priority": 14,
+      "area": "app",
+      "title": "新增骨骼肌量、下胸圍、腰高比、FFMI，首頁數據名稱加 (?) 說明",
+      "user_visible_behavior": "身體組成：骨骼肌量（手填，體脂率前）、腰高比（腰圍÷身高自動算，腰臀比後）、FFMI（去脂體重÷身高²自動算，BMI 後）；身體尺寸：下胸圍（手填，胸圍旁）；新增數據頁、首頁、報告頁折線圖選項皆同步；首頁每個數據名稱旁有灰色 (?)，點擊顯示該數據的用途說明。",
+      "status": "passing",
+      "verification": [
+        "pnpm test 全部通過（含新計算函式、skeletal_muscle/underbust 欄位存取與 migration、首頁 (?) 說明測試）。",
+        "pnpm typecheck 無錯誤。",
+        "./init.sh 基準驗證通過。"
+      ],
+      "evidence": [
+        "2026-11-07 | pnpm test | 先寫測試確認 Red（13 failed + 首頁 3 failed），實作後 12 suites / 105 tests 全過（新增 metricInfo.test.ts、home.test.tsx，擴充 DBProvider migration、bodyMetrics、measurementMerge、addData 測試）",
+        "2026-11-07 | pnpm typecheck | tsc --noEmit 無錯誤",
+        "2026-11-07 | ./init.sh | 基準驗證通過",
+        "2026-11-07 | code-reviewer agent | 無嚴重問題；MEDIUM：說明視窗淡出時內容先消失 → 改用 ref 保留最後內容；LOW：內臟脂肪分級依品牌不同、去脂體重說明補上體脂率推算 → 已修正文字"
+      ],
+      "notes": "2026-11-07 使用者明確要求新增骨骼肌量、下胸圍（需新增 SQLite 欄位 skeletal_muscle、underbust，ALTER TABLE，舊資料不受影響）；骨骼肌量與既有隱藏欄位 muscle_weight（肌肉重）為不同指標，另開欄位。腰高比、FFMI 為顯示時即時計算，不存 DB。 首頁「目前體重」(?) 因底色為主題色，改用半透明白色而非灰色。尚未在模擬器/實機目視確認。"
     }
   ]
 }
