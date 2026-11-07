@@ -10,7 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useMeasurements, type Measurement } from '@/hooks/useMeasurements';
 import { Colors } from '@/constants/colors';
-import { calcBmi, calcLeanMass } from '@/utils/bodyMetrics';
+import { calcBmi, calcLeanMass, calcWaistHipRatio } from '@/utils/bodyMetrics';
 
 type FormData = {
   height: string;
@@ -129,6 +129,7 @@ export default function AddDataScreen() {
     setForm(f => ({ ...f, [key]: val }));
 
   const autoBmi = calcBmi(toNum(form.weight), toNum(form.height));
+  const autoWaistHipRatio = calcWaistHipRatio(toNum(form.waist), toNum(form.hip));
   const autoLeanMass = calcLeanMass(toNum(form.weight), toNum(form.bodyFatWeight), toNum(form.bodyFatRate));
 
   const handleSave = async () => {
@@ -219,7 +220,14 @@ export default function AddDataScreen() {
           <Field label="體重" value={form.weight} onChange={set('weight')} unit="kg" />
           <Field label="體脂率" value={form.bodyFatRate} onChange={set('bodyFatRate')} unit="%" />
           <Field label="內臟脂肪等級" value={form.visceralFat} onChange={set('visceralFat')} unit="" />
-          <Field label="腰臀比" value={form.waistHipRatio} onChange={set('waistHipRatio')} unit="" />
+          <Field
+            label="腰臀比"
+            value={form.waistHipRatio}
+            onChange={set('waistHipRatio')}
+            unit=""
+            hint="空白則用腰圍÷臀圍自動算"
+            placeholder={autoWaistHipRatio != null ? autoWaistHipRatio.toFixed(2) : undefined}
+          />
           <Field label="體脂肪量" value={form.bodyFatWeight} onChange={set('bodyFatWeight')} unit="kg" />
           <AutoField label="去脂體重" value={autoLeanMass} unit="kg" hint="體重 − 體脂肪量" />
           <Field label="基礎代謝率" value={form.bmr} onChange={set('bmr')} unit="kcal" />
@@ -256,9 +264,11 @@ type FieldProps = {
   onChange: (v: string) => void;
   unit: string;
   required?: boolean;
+  hint?: string;
+  placeholder?: string;
 };
 
-function Field({ label, value, onChange, unit, required }: FieldProps) {
+function Field({ label, value, onChange, unit, required, hint, placeholder }: FieldProps) {
   return (
     <View style={styles.fieldRow}>
       <View style={styles.fieldLeft}>
@@ -268,6 +278,7 @@ function Field({ label, value, onChange, unit, required }: FieldProps) {
             <Text style={styles.requiredText}>必填</Text>
           </View>
         ) : null}
+        {hint ? <Text style={styles.autoHint}>{hint}</Text> : null}
       </View>
       <View style={styles.fieldRight}>
         <TextInput
@@ -275,8 +286,8 @@ function Field({ label, value, onChange, unit, required }: FieldProps) {
           value={value}
           onChangeText={onChange}
           keyboardType="decimal-pad"
-          placeholder="──"
-          placeholderTextColor="#CCCCCC"
+          placeholder={placeholder ?? '──'}
+          placeholderTextColor={placeholder ? Colors.textSecondary : '#CCCCCC'}
           textAlign="right"
         />
         {unit ? <Text style={styles.fieldUnit}>{unit}</Text> : null}

@@ -1,4 +1,4 @@
-import { calcBmi, calcLeanMass, withDerivedMetrics } from '@/utils/bodyMetrics';
+import { calcBmi, calcLeanMass, calcWaistHipRatio, withDerivedMetrics } from '@/utils/bodyMetrics';
 import type { Measurement } from '@/hooks/useMeasurements';
 
 function makeMeasurement(overrides: Partial<Measurement> = {}): Measurement {
@@ -60,7 +60,30 @@ describe('calcLeanMass', () => {
   });
 });
 
+describe('calcWaistHipRatio', () => {
+  it('computes waist / hip rounded to 2 decimals', () => {
+    // 70 / 92 = 0.7608...
+    expect(calcWaistHipRatio(70, 92)).toBe(0.76);
+  });
+
+  it('returns null when waist or hip is missing or non-positive', () => {
+    expect(calcWaistHipRatio(null, 92)).toBeNull();
+    expect(calcWaistHipRatio(70, null)).toBeNull();
+    expect(calcWaistHipRatio(70, 0)).toBeNull();
+  });
+});
+
 describe('withDerivedMetrics', () => {
+  it('auto-computes waist_hip_ratio from waist/hip when not entered manually', () => {
+    const m = makeMeasurement({ waist: 70, hip: 92, waist_hip_ratio: null });
+    expect(withDerivedMetrics(m, null).waist_hip_ratio).toBe(0.76);
+  });
+
+  it('keeps a manually entered waist_hip_ratio over the computed one', () => {
+    const m = makeMeasurement({ waist: 70, hip: 92, waist_hip_ratio: 0.8 });
+    expect(withDerivedMetrics(m, null).waist_hip_ratio).toBe(0.8);
+  });
+
   it('overrides any stored BMI with one computed from current height', () => {
     const m = makeMeasurement({ weight: 60, bmi: 99 });
     expect(withDerivedMetrics(m, 165).bmi).toBe(22);

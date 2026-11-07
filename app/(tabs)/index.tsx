@@ -118,7 +118,7 @@ export default function DataScreen() {
           <MeasurementCard label="內臟脂肪等級" value={d?.visceral_fat ?? null} unit="" valueColor={themeColor} />
         </View>
         <View style={styles.grid}>
-          <MeasurementCard label="腰臀比" value={d?.waist_hip_ratio ?? null} unit="" valueColor={themeColor} />
+          <MeasurementCard label="腰臀比" value={d?.waist_hip_ratio ?? null} unit="" valueColor={themeColor} decimals={2} />
           <MeasurementCard label="體脂肪量" value={d?.body_fat_weight ?? null} unit="kg" valueColor={themeColor} />
         </View>
         <View style={styles.grid}>

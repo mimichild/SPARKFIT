@@ -30,8 +30,9 @@
   - 新增 `src/utils/bodyMetrics.ts`：BMI = 體重 ÷ 身高²（用設定裡目前身高，所有紀錄顯示時即時重算）；去脂體重 = 體重 − 體脂肪量（沒有體脂肪量時用體脂率推算），兩者在表單上顯示為自動計算、不可手填
   - 經使用者同意新增 SQLite 欄位 `calf`（小腿圍），`DBProvider` 用 PRAGMA table_info 檢查後 ALTER TABLE，舊安裝升級不影響既有資料；儲存、HAS_DATA_CONDITION、備份匯入皆已納入
   - 身體尺寸在大腿圍旁新增小腿圍，報告折線圖可選
+  - 使用者追加：腰臀比預設自動用腰圍÷臀圍計算（自動值不存 DB、腰臀圍改了會跟著變），也可手填覆蓋；腰臀比卡片/報告顯示小數 2 位
   - code-reviewer 審查後修正：沒有身高時存檔不再清空原本存的 BMI；體脂肪量 > 體重時去脂體重回傳空值而非負數
-- 執行過的驗證：`pnpm test`（65 passed）、`pnpm typecheck`（無錯誤）、`./init.sh`
+- 執行過的驗證：`pnpm test`（69 passed）、`pnpm typecheck`（無錯誤）、`./init.sh`
 - 已擷取證據：見 feature_list.json body-001 evidence
 - 提交記錄：（見本輪 commit）
 - 已知風險或未解決問題：尚未在模擬器目視確認新畫面；既有問題——首頁「＋」在當天已有紀錄時開空白表單，存檔會覆蓋當天欄位（非本次造成，未修）

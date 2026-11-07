@@ -27,11 +27,19 @@ export function calcLeanMass(
   return lean != null && lean >= 0 ? round1(lean) : null;
 }
 
-/** 顯示用：BMI 一律用目前身高重算，並補上去脂體重。 */
+/** 腰臀比 = 腰圍 / 臀圍，四捨五入到小數 2 位。 */
+export function calcWaistHipRatio(waistCm: number | null, hipCm: number | null): number | null {
+  if (waistCm == null || hipCm == null || waistCm <= 0 || hipCm <= 0) return null;
+  return Math.round((waistCm / hipCm) * 100) / 100;
+}
+
+/** 顯示用：BMI 一律用目前身高重算，並補上去脂體重、腰臀比。 */
 export function withDerivedMetrics(m: Measurement, heightCm: number | null): DerivedMeasurement {
   return {
     ...m,
     bmi: calcBmi(m.weight, heightCm),
     lean_mass: calcLeanMass(m.weight, m.body_fat_weight, m.body_fat_rate),
+    // 有手填用手填，否則由腰圍/臀圍自動計算（自動值不寫入資料庫，腰臀圍改了會跟著變）
+    waist_hip_ratio: m.waist_hip_ratio ?? calcWaistHipRatio(m.waist, m.hip),
   };
 }

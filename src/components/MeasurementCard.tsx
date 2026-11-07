@@ -6,9 +6,10 @@ type Props = {
   value: number | null;
   unit: string;
   valueColor?: string;
+  decimals?: number;
 };
 
-export function MeasurementCard({ label, value, unit, valueColor }: Props) {
+export function MeasurementCard({ label, value, unit, valueColor, decimals = 1 }: Props) {
   const hasValue = value !== null;
 
   return (
@@ -19,7 +20,7 @@ export function MeasurementCard({ label, value, unit, valueColor }: Props) {
         !hasValue && styles.valuePlaceholder,
         hasValue && valueColor ? { color: valueColor } : undefined,
       ]}>
-        {hasValue ? value.toFixed(1) : '──'}
+        {hasValue ? value.toFixed(decimals) : '──'}
       </Text>
       {unit ? <Text style={styles.unit}>{unit}</Text> : null}
     </View>

@@ -25,11 +25,11 @@ type DateTarget = 'single' | 'start' | 'end';
 
 type MetricKey = keyof Omit<DerivedMeasurement, 'date'>;
 
-const METRICS: { key: MetricKey; label: string; unit: string }[] = [
+const METRICS: { key: MetricKey; label: string; unit: string; decimals?: number }[] = [
   { key: 'weight',        label: '體重',      unit: 'kg'   },
   { key: 'body_fat_rate',   label: '體脂率',       unit: '%'    },
   { key: 'visceral_fat',    label: '內臟脂肪等級', unit: ''     },
-  { key: 'waist_hip_ratio', label: '腰臀比',       unit: ''     },
+  { key: 'waist_hip_ratio', label: '腰臀比',       unit: '', decimals: 2 },
   { key: 'body_fat_weight', label: '體脂肪量',     unit: 'kg'   },
   { key: 'lean_mass',       label: '去脂體重',     unit: 'kg'   },
   { key: 'bmr',             label: '基礎代謝率',   unit: 'kcal' },
@@ -283,13 +283,13 @@ export default function ReportScreen() {
               </View>
             ) : (
               <View style={styles.metricGrid}>
-                {METRICS.map(({ key, label, unit }) => {
+                {METRICS.map(({ key, label, unit, decimals = 1 }) => {
                   const val = singleData[key];
                   return (
                     <View key={key} style={styles.metricCard}>
                       <Text style={styles.metricCardLabel}>{label}</Text>
                       <Text style={[styles.metricCardValue, { color: themeColor }]}>
-                        {val != null ? (val as number).toFixed(1) : '──'}
+                        {val != null ? (val as number).toFixed(decimals) : '──'}
                       </Text>
                       {unit ? <Text style={styles.metricCardUnit}>{unit}</Text> : null}
                     </View>
@@ -385,7 +385,7 @@ export default function ReportScreen() {
                           key={index}
                           style={[styles.dotLabel, { left: x - 18, top: y - 22, color: themeColor }]}
                         >
-                          {Number.isInteger(val) ? val : val.toFixed(1)}
+                          {Number.isInteger(val) ? val : val.toFixed(metricInfo.decimals ?? 1)}
                         </Text>
                       );
                     }}
