@@ -56,15 +56,15 @@ export function useBackup() {
           `INSERT OR REPLACE INTO measurements
             (date, weight, chest, waist, low_waist, hip, thigh, arm,
              bmi, bmr, body_fat_rate, body_fat_weight, muscle_weight, bone_weight,
-             visceral_fat, body_age, waist_hip_ratio, obesity_degree, recommended_calories)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             visceral_fat, body_age, waist_hip_ratio, obesity_degree, recommended_calories, calf)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             m.date, m.weight ?? null, m.chest ?? null, m.waist ?? null,
             m.low_waist ?? null, m.hip ?? null, m.thigh ?? null, m.arm ?? null,
             m.bmi ?? null, m.bmr ?? null, m.body_fat_rate ?? null, m.body_fat_weight ?? null,
             m.muscle_weight ?? null, m.bone_weight ?? null, m.visceral_fat ?? null,
             m.body_age ?? null, m.waist_hip_ratio ?? null, m.obesity_degree ?? null,
-            m.recommended_calories ?? null,
+            m.recommended_calories ?? null, m.calf ?? null,
           ],
         );
         setProgress(40 + Math.round(((i + 1) / Math.max(total, 1)) * 55));

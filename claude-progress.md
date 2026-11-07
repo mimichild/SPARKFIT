@@ -13,12 +13,29 @@
 - appstore-001：passing（但 App 仍未上架，Apple 審查持續拉鋸中）；proactively 修復訂閱付費畫面缺 Apple Guideline 3.1.2(c) 必要資訊（跟 SPARKSHAPE 被拒的原因同一套範本缺口），Build 4 重新送審後 2026-08-10 收到新一輪拒絕——**Guideline 2.1 Information Needed**（非文案/程式碼問題，同一天 SPARKPLATE/SPARKSHAPE 也收到一樣的拒絕原因）：Apple 要求在「App 審查資訊→備註」補充裝置清單、App 說明、外部服務清單、地區差異、IAP 導覽方式，並附上實體裝置螢幕錄影；2026-08-19 使用者用 iPhone 17 錄了螢幕錄影（`assets/images/ScreenRecording_08-19-2026 13-07-55_1.mp4`，涵蓋主畫面啟動、核心功能瀏覽含新增數據表單、實際點「訂閱」跳出購買確認彈窗後安全取消兩次），Claude 用 ffmpeg 壓縮到 3.9MB、寫好備註文字並上傳，已重新提交至 App 審查，狀態變成「等待審查」
 - **2026-09-22 重大變更：App 已遷移到全新 bundle ID `com.sparkscale.app` / 全新 Apple ID `6814699374`**（舊 Apple ID `6793043215`、舊 bundle `com.sparkfit.app` 已棄用但保留，改名為「SPARK SCALE（舊）」）。根因：舊記錄因先前工作階段只改了 App 顯示名稱，底層 bundle ID 仍是 `com.sparkfit.app`，被 Apple Guideline 4.1(a) Copycat 判定與其他已上架 App 撞名而反覆拒絕；bundle ID 建立後不可變更，故整套遷移到新 App 記錄（含新 RevenueCat App 綁定、新 Public API Key `appl_LdlUdHizyufsAJLaTjgsasWaiQI`）。`app.json`/`eas.json`/`src/constants/monetization.ts` 皆已改用新值並已 build+submit 成功。App Store Connect 新記錄的 App 資訊、中英文 Store 描述、截圖、隱私權政策 URL（逐 locale）、訂閱群組與兩個訂閱項目皆已搬遷完成，已合併提交（App 版本+訂閱群組+2 個訂閱項目共 4 項）並顯示「已提交 4 個項目」，狀態為「正在等待審查」
 - 2026-08-13：使用者要求把 App Store Connect 的繁體中文「App 資訊」名稱（App Store 上架顯示名稱）改為「SPARK FIT心動身形」（依使用者指定字串，FIT 與心動之間無空格），已在後台存檔成功；App 當時狀態為「正在等待審查」，純文案修改不影響排隊、不需重新提交，儲存後狀態仍維持「正在等待審查」
+- 2026-11-07：body-001 passing——身體組成改為體脂率／內臟脂肪等級／腰臀比／體脂肪量／去脂體重（自動算）／基礎代謝率／BMI（自動算），新增 calf（小腿圍）DB 欄位
 - 目前最高優先級未完成功能：無（下一輪從 feature_list.json 選下一個 not_started 功能；appstore-001 已 passing，等待 Apple 審查結果非我方可控）
 - 目前 blocker：無
 - 背景：Apple Developer Program 已生效（2026-07-20）；ios-001～ios-009、test-001 皆已 passing；App icon 加了描邊解決對比度偏軟問題並實機確認；已設定 EAS Update（OTA）支援；eas.json 補上 appVersionSource remote／autoIncrement／ascAppId；報告頁日期選擇器統一成跟數據頁一樣的月曆樣式；修好「清空紀錄仍在月曆顯示紅點」的資料查詢 bug；新增真正的刪除單日紀錄功能（垃圾桶圖示＋二次確認，iOS/Android 共用）
 - Android release APK 本地建置已知隱患：`android/`（gitignored、由 `expo prebuild` 產生）曾長期未跟著 `app.json` 更新重新生成，導致累積 3 個潛在問題（AdMob meta-data 缺失、splash 缺 image、`softwareKeyboardLayoutMode` 值不合法），已於工作階段 020 全部修掉並改成每次本地建置前先 `rm -rf android && npx expo prebuild --platform android` 再 `assembleRelease`，避免舊 native 專案殘留
 
 ## 工作階段日誌
+
+### 工作階段 026
+
+- 日期：2026-11-07
+- 本輪目標：body-001——身體組成項目改版＋新增小腿圍
+- 已完成：
+  - 身體組成（新增數據頁、首頁、報告頁單日卡片與區間折線圖選項）改為：體脂率／內臟脂肪等級／腰臀比／體脂肪量／去脂體重／基礎代謝率／BMI；移除肌肉重、骨量、體年齡的畫面（資料庫值保留、存檔原值帶回）
+  - 新增 `src/utils/bodyMetrics.ts`：BMI = 體重 ÷ 身高²（用設定裡目前身高，所有紀錄顯示時即時重算）；去脂體重 = 體重 − 體脂肪量（沒有體脂肪量時用體脂率推算），兩者在表單上顯示為自動計算、不可手填
+  - 經使用者同意新增 SQLite 欄位 `calf`（小腿圍），`DBProvider` 用 PRAGMA table_info 檢查後 ALTER TABLE，舊安裝升級不影響既有資料；儲存、HAS_DATA_CONDITION、備份匯入皆已納入
+  - 身體尺寸在大腿圍旁新增小腿圍，報告折線圖可選
+  - code-reviewer 審查後修正：沒有身高時存檔不再清空原本存的 BMI；體脂肪量 > 體重時去脂體重回傳空值而非負數
+- 執行過的驗證：`pnpm test`（65 passed）、`pnpm typecheck`（無錯誤）、`./init.sh`
+- 已擷取證據：見 feature_list.json body-001 evidence
+- 提交記錄：（見本輪 commit）
+- 已知風險或未解決問題：尚未在模擬器目視確認新畫面；既有問題——首頁「＋」在當天已有紀錄時開空白表單，存檔會覆蓋當天欄位（非本次造成，未修）
+- 下一步最佳動作：模擬器/實機確認新版面；視使用者意願修首頁「＋」覆蓋問題；改動全在 JS 層（含 migration），可用 EAS Update 推送或隨下一版 build
 
 ### 工作階段 025
 

@@ -1,6 +1,6 @@
 {
   "project": "SPARKFIT",
-  "last_updated": "2026-09-22",
+  "last_updated": "2026-11-07",
   "rules": {
     "single_active_feature": true,
     "passing_requires_evidence": true,
@@ -243,6 +243,26 @@
         "2026-09-22（同日稍後）| App Store Connect 舊記錄（Apple ID 6793043215）：發現先前 EULA 診斷回合送出的審查提交（週三下午4:36，1 個項目）從未撤回，仍卡在『等待審查』；點擊『將此版本從審查中移除』並確認撤回 | 狀態變成『被開發者拒絕』，三筆歷史提交（週三4:36／8/21 19:04／8/5 16:38）均顯示『已移除』，舊記錄確認完全閒置、不會再被 Apple 審查"
       ],
       "notes": "本項是 proactive 修復——這個 App 本身尚未被 Apple 用這個理由拒絕過，是因為姊妹 App SPARKSHAPE 用同一套範本被拒絕，判斷同樣缺口大機率會在人工審查看到付費畫面時被拒，因此在使用者確認後（先撤回審查中的舊提交）主動套用同樣修法再重新送審。2026-08-10 Build 4 重新送審後收到第二輪拒絕（2.1 Information Needed），性質跟第一輪（3.1.2(c) 文案缺口）完全不同，是 Apple 對『從未有審核通過紀錄的新 App』的資訊要求機制，SPARKPLATE/SPARKSHAPE 同時期都收到一模一樣的拒絕原因。2026-08-19 補齊：使用者用 iPhone 17 錄好螢幕錄影（涵蓋核心功能與完整購買流程，兩次都安全取消未觸及密碼輸入），Claude 用 ffmpeg 壓縮到 3.9MB（原始 91.4MB 超過上傳工具 10MB 限制）並撰寫備註文字上傳。App Store Connect 操作要點（同日在其他 App 摸出的規律）：點『更新審查內容』後備註欄位會被清空但附件不會，須在狀態轉成『準備審查』後重新填備註存檔，並重新整理頁面確認真的持久化，才能點『重新提交至 App 審查』。修完後同樣要等 Apple 審查結果。 2026-09-22 追加：SPARK SCALE 舊 App 記錄（Apple ID 6793043215）因 4.1(a) Copycat 反覆被拒（根因是先前工作階段只改了顯示名稱，底層 bundleIdentifier 仍是 com.sparkfit.app 與其他已上架 App 撞名），確認 bundle ID 不可變更後，完整遷移到新 App 記錄（Apple ID 6814699374，bundle com.sparkscale.app）。舊記錄已改名為『SPARK SCALE（舊）』保留但不再使用，未刪除任何資料。此次也再次驗證『只修中文 locale 漏修英文 locale』是本帳號跨多個 App 反覆出現的系統性漏洞模式（EULA 連結、隱私權政策 URL 皆曾只修中文），未來任何 locale 相關欄位修改都必須明確逐一檢查每個已發佈語系。"
+    },
+    {
+      "id": "body-001",
+      "priority": 12,
+      "area": "app",
+      "title": "身體組成項目改版（BMI/去脂體重自動計算）＋新增小腿圍",
+      "user_visible_behavior": "新增數據頁、數據首頁、報告頁（單日與區間折線圖選項）的身體組成改為：體脂率／內臟脂肪等級／腰臀比／體脂肪量／去脂體重／基礎代謝率／BMI；BMI 由身高＋體重自動計算、去脂體重由體重−體脂肪量自動計算，皆不需手填；身體尺寸在大腿圍旁新增小腿圍，報告折線圖可選小腿圍。",
+      "status": "passing",
+      "verification": [
+        "pnpm test 全部通過（含 bodyMetrics 計算函式、calf 欄位存取、DB migration 的新測試）。",
+        "pnpm typecheck 無錯誤。",
+        "./init.sh 基準驗證通過。"
+      ],
+      "evidence": [
+        "2026-11-07 | pnpm test | 先寫測試確認 Red（6 failed），實作後 8 suites / 65 tests 全過（新增 bodyMetrics.test.ts、DBProvider.test.ts migration、useMeasurements calf 存取）",
+        "2026-11-07 | pnpm typecheck | tsc --noEmit 無錯誤",
+        "2026-11-07 | ./init.sh | 基準驗證通過",
+        "2026-11-07 | code-reviewer agent | 無阻擋問題；MEDIUM：無身高時存檔會清空舊 BMI → 已修為保留原值；LOW：去脂體重負值 → 已修為回傳 null"
+      ],
+      "notes": "2026-11-07 使用者同意新增 SQLite 欄位 calf（ALTER TABLE，舊資料不受影響）；去脂體重選自動計算不加欄位；BMI 選全部用目前身高＋當日體重即時重算。移除的舊欄位（肌肉重、骨量、體年齡）資料保留在資料庫、儲存時原值帶回。 尚未在模擬器/實機目視確認畫面；腰臀比依使用者指示維持手填（未自動由腰圍/臀圍計算）。既有問題（非本次造成）：首頁「＋」在當天已有紀錄時以 add 模式開啟空白表單，存檔會覆蓋當天畫面欄位。"
     }
   ]
 }

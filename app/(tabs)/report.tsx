@@ -14,6 +14,7 @@ import { useSettingsStore } from '@/stores/settingsStore';
 import { useMeasurements, type Measurement } from '@/hooks/useMeasurements';
 import { DataCalendarModal } from '@/components/DataCalendarModal';
 import { Colors } from '@/constants/colors';
+import { withDerivedMetrics, type DerivedMeasurement } from '@/utils/bodyMetrics';
 
 const SCREEN_W = Dimensions.get('window').width;
 const CHART_W = SCREEN_W - 40;
@@ -22,22 +23,23 @@ const NICE_STEPS = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000];
 type Mode = 'single' | 'range';
 type DateTarget = 'single' | 'start' | 'end';
 
-type MetricKey = keyof Omit<Measurement, 'date'>;
+type MetricKey = keyof Omit<DerivedMeasurement, 'date'>;
 
 const METRICS: { key: MetricKey; label: string; unit: string }[] = [
   { key: 'weight',        label: '體重',      unit: 'kg'   },
-  { key: 'bmi',            label: 'BMI',       unit: ''     },
-  { key: 'body_fat_rate', label: '體脂肪率',  unit: '%'    },
-  { key: 'muscle_weight', label: '肌肉重',    unit: 'kg'   },
-  { key: 'bone_weight',   label: '骨量',      unit: 'kg'   },
-  { key: 'visceral_fat',  label: '內臟脂肪',  unit: ''     },
-  { key: 'bmr',           label: '基礎代謝',  unit: 'kcal' },
-  { key: 'body_age',      label: '體年齡',    unit: '歲'   },
+  { key: 'body_fat_rate',   label: '體脂率',       unit: '%'    },
+  { key: 'visceral_fat',    label: '內臟脂肪等級', unit: ''     },
+  { key: 'waist_hip_ratio', label: '腰臀比',       unit: ''     },
+  { key: 'body_fat_weight', label: '體脂肪量',     unit: 'kg'   },
+  { key: 'lean_mass',       label: '去脂體重',     unit: 'kg'   },
+  { key: 'bmr',             label: '基礎代謝率',   unit: 'kcal' },
+  { key: 'bmi',             label: 'BMI',          unit: ''     },
   { key: 'chest',         label: '胸圍',      unit: 'cm'   },
   { key: 'waist',         label: '腰圍',      unit: 'cm'   },
   { key: 'low_waist',     label: '低腰圍',    unit: 'cm'   },
   { key: 'hip',           label: '臀圍',      unit: 'cm'   },
   { key: 'thigh',         label: '大腿圍',    unit: 'cm'   },
+  { key: 'calf',          label: '小腿圍',    unit: 'cm'   },
   { key: 'arm',           label: '手臂圍',    unit: 'cm'   },
 ];
 
@@ -70,6 +72,7 @@ function makeDefaultStart(): Date {
 
 export default function ReportScreen() {
   const themeColor = useSettingsStore(s => s.themeColor);
+  const height = useSettingsStore(s => s.height);
   const { getMeasurement, getMeasurements } = useMeasurements();
 
   const [mode, setMode] = useState<Mode>('range');
@@ -81,8 +84,18 @@ export default function ReportScreen() {
   const [showPicker, setShowPicker] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>('weight');
 
-  const [singleData, setSingleData] = useState<Measurement | null>(null);
-  const [rangeData, setRangeData] = useState<Measurement[]>([]);
+  const [rawSingleData, setSingleData] = useState<Measurement | null>(null);
+  const [rawRangeData, setRangeData] = useState<Measurement[]>([]);
+
+  // BMI 一律用目前身高即時計算、去脂體重由體重−體脂肪量計算
+  const singleData = useMemo(
+    () => (rawSingleData ? withDerivedMetrics(rawSingleData, height) : null),
+    [rawSingleData, height],
+  );
+  const rangeData = useMemo(
+    () => rawRangeData.map(m => withDerivedMetrics(m, height)),
+    [rawRangeData, height],
+  );
 
   const loadSingle = useCallback(async () => {
     const m = await getMeasurement(toKey(singleDate));

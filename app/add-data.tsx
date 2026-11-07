@@ -10,45 +10,48 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useMeasurements, type Measurement } from '@/hooks/useMeasurements';
 import { Colors } from '@/constants/colors';
+import { calcBmi, calcLeanMass } from '@/utils/bodyMetrics';
 
 type FormData = {
   height: string;
   shoulderWidth: string;
   targetWeight: string;
   weight: string;
-  bmi: string;
   bodyFatRate: string;
-  muscleWeight: string;
-  boneWeight: string;
   visceralFat: string;
+  waistHipRatio: string;
+  bodyFatWeight: string;
   bmr: string;
-  bodyAge: string;
   chest: string;
   waist: string;
   lowWaist: string;
   hip: string;
   thigh: string;
+  calf: string;
   arm: string;
 };
 
 const EMPTY_FORM: FormData = {
   height: '', shoulderWidth: '', targetWeight: '', weight: '',
-  bmi: '', bodyFatRate: '', muscleWeight: '', boneWeight: '',
-  visceralFat: '', bmr: '', bodyAge: '',
-  chest: '', waist: '', lowWaist: '', hip: '', thigh: '', arm: '',
+  bodyFatRate: '', visceralFat: '', waistHipRatio: '', bodyFatWeight: '', bmr: '',
+  chest: '', waist: '', lowWaist: '', hip: '', thigh: '', calf: '', arm: '',
 };
 
 // 已從畫面上移除，但仍需在儲存時原封不動帶回去，避免清空使用者手機上的舊資料
 type HiddenFields = {
-  body_fat_weight: number | null;
-  waist_hip_ratio: number | null;
+  bmi: number | null;
+  muscle_weight: number | null;
+  bone_weight: number | null;
+  body_age: number | null;
   obesity_degree: number | null;
   recommended_calories: number | null;
 };
 
 const EMPTY_HIDDEN_FIELDS: HiddenFields = {
-  body_fat_weight: null,
-  waist_hip_ratio: null,
+  bmi: null,
+  muscle_weight: null,
+  bone_weight: null,
+  body_age: null,
   obesity_degree: null,
   recommended_calories: null,
 };
@@ -81,8 +84,10 @@ export default function AddDataScreen() {
     const m = await getMeasurement(date);
 
     setHiddenFields({
-      body_fat_weight: m?.body_fat_weight ?? null,
-      waist_hip_ratio: m?.waist_hip_ratio ?? null,
+      bmi: m?.bmi ?? null,
+      muscle_weight: m?.muscle_weight ?? null,
+      bone_weight: m?.bone_weight ?? null,
+      body_age: m?.body_age ?? null,
       obesity_degree: m?.obesity_degree ?? null,
       recommended_calories: m?.recommended_calories ?? null,
     });
@@ -93,18 +98,17 @@ export default function AddDataScreen() {
         shoulderWidth: toStr(shoulderWidth),
         targetWeight: toStr(targetWeight),
         weight: toStr(m?.weight),
-        bmi: toStr(m?.bmi),
         bodyFatRate: toStr(m?.body_fat_rate),
-        muscleWeight: toStr(m?.muscle_weight),
-        boneWeight: toStr(m?.bone_weight),
         visceralFat: toStr(m?.visceral_fat),
+        waistHipRatio: toStr(m?.waist_hip_ratio),
+        bodyFatWeight: toStr(m?.body_fat_weight),
         bmr: toStr(m?.bmr),
-        bodyAge: toStr(m?.body_age),
         chest: toStr(m?.chest),
         waist: toStr(m?.waist),
         lowWaist: toStr(m?.low_waist),
         hip: toStr(m?.hip),
         thigh: toStr(m?.thigh),
+        calf: toStr(m?.calf),
         arm: toStr(m?.arm),
       });
     } else {
@@ -124,6 +128,9 @@ export default function AddDataScreen() {
   const set = (key: keyof FormData) => (val: string) =>
     setForm(f => ({ ...f, [key]: val }));
 
+  const autoBmi = calcBmi(toNum(form.weight), toNum(form.height));
+  const autoLeanMass = calcLeanMass(toNum(form.weight), toNum(form.bodyFatWeight), toNum(form.bodyFatRate));
+
   const handleSave = async () => {
     const newHeight = toNum(form.height);
     const newShoulderWidth = toNum(form.shoulderWidth);
@@ -132,6 +139,7 @@ export default function AddDataScreen() {
     if (newShoulderWidth !== shoulderWidth) setShoulderWidth(newShoulderWidth);
     if (newTargetWeight !== targetWeight) setTargetWeight(newTargetWeight);
 
+    const { bmi: storedBmi, ...otherHiddenFields } = hiddenFields;
     const m: Measurement = {
       date,
       weight: toNum(form.weight),
@@ -140,15 +148,16 @@ export default function AddDataScreen() {
       low_waist: toNum(form.lowWaist),
       hip: toNum(form.hip),
       thigh: toNum(form.thigh),
+      calf: toNum(form.calf),
       arm: toNum(form.arm),
-      bmi: toNum(form.bmi),
+      // 算不出來（沒身高或沒體重）時保留原本存的值，不要清空
+      bmi: calcBmi(toNum(form.weight), newHeight) ?? storedBmi,
       bmr: toNum(form.bmr),
       body_fat_rate: toNum(form.bodyFatRate),
-      muscle_weight: toNum(form.muscleWeight),
-      bone_weight: toNum(form.boneWeight),
+      body_fat_weight: toNum(form.bodyFatWeight),
       visceral_fat: toNum(form.visceralFat),
-      body_age: toNum(form.bodyAge),
-      ...hiddenFields,
+      waist_hip_ratio: toNum(form.waistHipRatio),
+      ...otherHiddenFields,
     };
 
     await saveMeasurement(m);
@@ -208,13 +217,13 @@ export default function AddDataScreen() {
 
           <SectionHeader title="身體組成" />
           <Field label="體重" value={form.weight} onChange={set('weight')} unit="kg" />
-          <Field label="BMI" value={form.bmi} onChange={set('bmi')} unit="" />
-          <Field label="體脂肪率" value={form.bodyFatRate} onChange={set('bodyFatRate')} unit="%" />
-          <Field label="肌肉重" value={form.muscleWeight} onChange={set('muscleWeight')} unit="kg" />
-          <Field label="骨量" value={form.boneWeight} onChange={set('boneWeight')} unit="kg" />
-          <Field label="內臟脂肪" value={form.visceralFat} onChange={set('visceralFat')} unit="" />
-          <Field label="基礎代謝" value={form.bmr} onChange={set('bmr')} unit="kcal" />
-          <Field label="體年齡" value={form.bodyAge} onChange={set('bodyAge')} unit="歲" />
+          <Field label="體脂率" value={form.bodyFatRate} onChange={set('bodyFatRate')} unit="%" />
+          <Field label="內臟脂肪等級" value={form.visceralFat} onChange={set('visceralFat')} unit="" />
+          <Field label="腰臀比" value={form.waistHipRatio} onChange={set('waistHipRatio')} unit="" />
+          <Field label="體脂肪量" value={form.bodyFatWeight} onChange={set('bodyFatWeight')} unit="kg" />
+          <AutoField label="去脂體重" value={autoLeanMass} unit="kg" hint="體重 − 體脂肪量" />
+          <Field label="基礎代謝率" value={form.bmr} onChange={set('bmr')} unit="kcal" />
+          <AutoField label="BMI" value={autoBmi} unit="" hint="由身高、體重計算" />
 
           <SectionHeader title="身體尺寸" />
           <Field label="胸圍" value={form.chest} onChange={set('chest')} unit="cm" />
@@ -222,6 +231,7 @@ export default function AddDataScreen() {
           <Field label="低腰圍" value={form.lowWaist} onChange={set('lowWaist')} unit="cm" />
           <Field label="臀圍" value={form.hip} onChange={set('hip')} unit="cm" />
           <Field label="大腿圍" value={form.thigh} onChange={set('thigh')} unit="cm" />
+          <Field label="小腿圍" value={form.calf} onChange={set('calf')} unit="cm" />
           <Field label="手臂圍" value={form.arm} onChange={set('arm')} unit="cm" />
 
           <View style={{ height: 40 }} />
@@ -269,6 +279,23 @@ function Field({ label, value, onChange, unit, required }: FieldProps) {
           placeholderTextColor="#CCCCCC"
           textAlign="right"
         />
+        {unit ? <Text style={styles.fieldUnit}>{unit}</Text> : null}
+      </View>
+    </View>
+  );
+}
+
+function AutoField({ label, value, unit, hint }: { label: string; value: number | null; unit: string; hint: string }) {
+  return (
+    <View style={styles.fieldRow}>
+      <View style={styles.fieldLeft}>
+        <Text style={styles.fieldLabel}>{label}</Text>
+        <Text style={styles.autoHint}>{hint}</Text>
+      </View>
+      <View style={styles.fieldRight}>
+        <Text style={[styles.fieldInput, styles.autoValue, value == null && styles.autoPlaceholder]}>
+          {value != null ? value.toFixed(1) : '──'}
+        </Text>
         {unit ? <Text style={styles.fieldUnit}>{unit}</Text> : null}
       </View>
     </View>
@@ -370,6 +397,17 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     minWidth: 80,
     padding: 0,
+  },
+  autoHint: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+  },
+  autoValue: {
+    textAlign: 'right',
+    color: Colors.textSecondary,
+  },
+  autoPlaceholder: {
+    color: '#CCCCCC',
   },
   fieldUnit: {
     fontSize: 13,

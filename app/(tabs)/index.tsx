@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { Colors } from '@/constants/colors';
 import { toDateKey, formatDate } from '@/utils/date';
+import { withDerivedMetrics } from '@/utils/bodyMetrics';
 
 function isEmptyMeasurement(m: Measurement): boolean {
   return Object.entries(m).every(([key, value]) => key === 'date' || value == null);
@@ -33,6 +34,7 @@ function buildGoalHint(targetWeight: number | null, currentWeight: number | null
 export default function DataScreen() {
   const themeColor = useSettingsStore(s => s.themeColor);
   const targetWeight = useSettingsStore(s => s.targetWeight);
+  const height = useSettingsStore(s => s.height);
 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
@@ -65,6 +67,7 @@ export default function DataScreen() {
   };
 
   const w = measurement?.weight ?? null;
+  const d = measurement ? withDerivedMetrics(measurement, height) : null;
 
   return (
     <View style={{ flex: 1 }}>
@@ -111,35 +114,39 @@ export default function DataScreen() {
         {/* ── 身體組成 ── */}
         <Text style={styles.sectionTitle}>身體組成</Text>
         <View style={styles.grid}>
-          <MeasurementCard label="BMI" value={measurement?.bmi ?? null} unit="" valueColor={themeColor} />
-          <MeasurementCard label="體脂肪率" value={measurement?.body_fat_rate ?? null} unit="%" valueColor={themeColor} />
+          <MeasurementCard label="體脂率" value={d?.body_fat_rate ?? null} unit="%" valueColor={themeColor} />
+          <MeasurementCard label="內臟脂肪等級" value={d?.visceral_fat ?? null} unit="" valueColor={themeColor} />
         </View>
         <View style={styles.grid}>
-          <MeasurementCard label="肌肉重" value={measurement?.muscle_weight ?? null} unit="kg" valueColor={themeColor} />
-          <MeasurementCard label="骨量" value={measurement?.bone_weight ?? null} unit="kg" valueColor={themeColor} />
+          <MeasurementCard label="腰臀比" value={d?.waist_hip_ratio ?? null} unit="" valueColor={themeColor} />
+          <MeasurementCard label="體脂肪量" value={d?.body_fat_weight ?? null} unit="kg" valueColor={themeColor} />
         </View>
         <View style={styles.grid}>
-          <MeasurementCard label="內臟脂肪" value={measurement?.visceral_fat ?? null} unit="" valueColor={themeColor} />
-          <MeasurementCard label="基礎代謝" value={measurement?.bmr ?? null} unit="kcal" valueColor={themeColor} />
+          <MeasurementCard label="去脂體重" value={d?.lean_mass ?? null} unit="kg" valueColor={themeColor} />
+          <MeasurementCard label="基礎代謝率" value={d?.bmr ?? null} unit="kcal" valueColor={themeColor} />
         </View>
         <View style={styles.grid}>
-          <MeasurementCard label="體年齡" value={measurement?.body_age ?? null} unit="歲" valueColor={themeColor} />
+          <MeasurementCard label="BMI" value={d?.bmi ?? null} unit="" valueColor={themeColor} />
           <View style={{ flex: 1, margin: 4 }} />
         </View>
 
         {/* ── 身體尺寸 ── */}
         <Text style={styles.sectionTitle}>身體尺寸</Text>
         <View style={styles.grid}>
-          <MeasurementCard label="胸圍" value={measurement?.chest ?? null} unit="cm" valueColor={themeColor} />
-          <MeasurementCard label="腰圍" value={measurement?.waist ?? null} unit="cm" valueColor={themeColor} />
+          <MeasurementCard label="胸圍" value={d?.chest ?? null} unit="cm" valueColor={themeColor} />
+          <MeasurementCard label="腰圍" value={d?.waist ?? null} unit="cm" valueColor={themeColor} />
         </View>
         <View style={styles.grid}>
-          <MeasurementCard label="低腰圍" value={measurement?.low_waist ?? null} unit="cm" valueColor={themeColor} />
-          <MeasurementCard label="臀圍" value={measurement?.hip ?? null} unit="cm" valueColor={themeColor} />
+          <MeasurementCard label="低腰圍" value={d?.low_waist ?? null} unit="cm" valueColor={themeColor} />
+          <MeasurementCard label="臀圍" value={d?.hip ?? null} unit="cm" valueColor={themeColor} />
         </View>
         <View style={styles.grid}>
-          <MeasurementCard label="大腿圍" value={measurement?.thigh ?? null} unit="cm" valueColor={themeColor} />
-          <MeasurementCard label="手臂圍" value={measurement?.arm ?? null} unit="cm" valueColor={themeColor} />
+          <MeasurementCard label="大腿圍" value={d?.thigh ?? null} unit="cm" valueColor={themeColor} />
+          <MeasurementCard label="小腿圍" value={d?.calf ?? null} unit="cm" valueColor={themeColor} />
+        </View>
+        <View style={styles.grid}>
+          <MeasurementCard label="手臂圍" value={d?.arm ?? null} unit="cm" valueColor={themeColor} />
+          <View style={{ flex: 1, margin: 4 }} />
         </View>
 
         <View style={{ height: 100 }} />

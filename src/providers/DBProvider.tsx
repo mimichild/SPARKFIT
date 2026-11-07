@@ -3,7 +3,7 @@ import { SQLiteProvider, useSQLiteContext, type SQLiteDatabase } from 'expo-sqli
 
 import { DB_NAME } from '@/constants';
 
-async function initDatabase(db: SQLiteDatabase): Promise<void> {
+export async function initDatabase(db: SQLiteDatabase): Promise<void> {
   await db.execAsync('PRAGMA journal_mode = WAL;');
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS measurements (
@@ -14,6 +14,7 @@ async function initDatabase(db: SQLiteDatabase): Promise<void> {
       low_waist           REAL,
       hip                 REAL,
       thigh               REAL,
+      calf                REAL,
       arm                 REAL,
       bmi                 REAL,
       bmr                 REAL,
@@ -28,6 +29,12 @@ async function initDatabase(db: SQLiteDatabase): Promise<void> {
       recommended_calories REAL
     );
   `);
+
+  // 舊版資料表沒有 calf（小腿圍），補欄位；既有資料不受影響
+  const columns = await db.getAllAsync<{ name: string }>('PRAGMA table_info(measurements)');
+  if (!columns.some(c => c.name === 'calf')) {
+    await db.execAsync('ALTER TABLE measurements ADD COLUMN calf REAL');
+  }
 }
 
 export function DBProvider({ children }: { children: ReactNode }) {

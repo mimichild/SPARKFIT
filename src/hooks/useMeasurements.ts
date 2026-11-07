@@ -9,6 +9,7 @@ export type Measurement = {
   low_waist: number | null;
   hip: number | null;
   thigh: number | null;
+  calf: number | null;
   arm: number | null;
   bmi: number | null;
   bmr: number | null;
@@ -29,7 +30,7 @@ const HAS_DATA_CONDITION = `(
   bmr IS NOT NULL OR body_fat_rate IS NOT NULL OR body_fat_weight IS NOT NULL OR
   muscle_weight IS NOT NULL OR bone_weight IS NOT NULL OR visceral_fat IS NOT NULL OR
   body_age IS NOT NULL OR waist_hip_ratio IS NOT NULL OR obesity_degree IS NOT NULL OR
-  recommended_calories IS NOT NULL
+  recommended_calories IS NOT NULL OR calf IS NOT NULL
 )`;
 
 export function useMeasurements() {
@@ -52,13 +53,13 @@ export function useMeasurements() {
         `INSERT OR REPLACE INTO measurements
           (date, weight, chest, waist, low_waist, hip, thigh, arm,
            bmi, bmr, body_fat_rate, body_fat_weight, muscle_weight, bone_weight,
-           visceral_fat, body_age, waist_hip_ratio, obesity_degree, recommended_calories)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           visceral_fat, body_age, waist_hip_ratio, obesity_degree, recommended_calories, calf)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           m.date, m.weight, m.chest, m.waist, m.low_waist, m.hip, m.thigh, m.arm,
           m.bmi, m.bmr, m.body_fat_rate, m.body_fat_weight, m.muscle_weight,
           m.bone_weight, m.visceral_fat, m.body_age, m.waist_hip_ratio,
-          m.obesity_degree, m.recommended_calories,
+          m.obesity_degree, m.recommended_calories, m.calf,
         ],
       );
     },
