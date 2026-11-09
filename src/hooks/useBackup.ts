@@ -8,6 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useDBContext } from '@/providers/DBProvider';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { STORAGE_KEYS } from '@/constants';
+import { describeImportError, importMeasurements, parseBackup } from '@/utils/backupImport';
 
 export type BackupStatus = 'idle' | 'exporting' | 'importing' | 'done' | 'error';
 
@@ -39,38 +40,19 @@ export function useBackup() {
       });
       setProgress(20);
 
-      const backup = JSON.parse(content);
-      if (!Array.isArray(backup?.measurements)) throw new Error('invalid format');
+      const backup = parseBackup(content);
       setProgress(30);
+      setMessage(mode === 'overwrite' ? '覆蓋資料中...' : '合併資料中...');
 
-      if (mode === 'overwrite') {
-        setMessage('清除現有資料...');
-        await db.runAsync('DELETE FROM measurements');
-      }
-      setProgress(40);
-
-      const total = backup.measurements.length;
-      for (let i = 0; i < total; i++) {
-        const m = backup.measurements[i];
-        await db.runAsync(
-          `INSERT OR REPLACE INTO measurements
-            (date, weight, chest, waist, low_waist, hip, thigh, arm,
-             bmi, bmr, body_fat_rate, body_fat_weight, muscle_weight, bone_weight,
-             visceral_fat, body_age, waist_hip_ratio, obesity_degree, recommended_calories, calf, skeletal_muscle, underbust)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            m.date, m.weight ?? null, m.chest ?? null, m.waist ?? null,
-            m.low_waist ?? null, m.hip ?? null, m.thigh ?? null, m.arm ?? null,
-            m.bmi ?? null, m.bmr ?? null, m.body_fat_rate ?? null, m.body_fat_weight ?? null,
-            m.muscle_weight ?? null, m.bone_weight ?? null, m.visceral_fat ?? null,
-            m.body_age ?? null, m.waist_hip_ratio ?? null, m.obesity_degree ?? null,
-            m.recommended_calories ?? null, m.calf ?? null,
-            m.skeletal_muscle ?? null, m.underbust ?? null,
-          ],
-        );
-        setProgress(40 + Math.round(((i + 1) / Math.max(total, 1)) * 55));
-        setMessage(`匯入中... (${i + 1} / ${total})`);
-      }
+      const { imported, skipped } = await importMeasurements(
+        db,
+        backup.measurements,
+        mode,
+        (done, total) => {
+          setProgress(30 + Math.round((done / Math.max(total, 1)) * 65));
+          setMessage(`匯入中... (${done} / ${total})`);
+        },
+      );
 
       if (backup.settings) {
         const s = backup.settings;
@@ -83,13 +65,15 @@ export function useBackup() {
       setProgress(100);
       setMessage('匯入完成');
       setBackupStatus('done');
-      Alert.alert('匯入成功', `已成功匯入 ${total} 筆資料`, [
+      const skippedNote = skipped > 0 ? `\n（略過 ${skipped} 筆缺少日期的資料）` : '';
+      Alert.alert('匯入成功', `已成功匯入 ${imported} 筆資料${skippedNote}`, [
         { text: '確定', onPress: reset },
       ]);
-    } catch {
+    } catch (error) {
+      console.warn('[backup] import failed', error);
       setBackupStatus('error');
       setMessage('匯入失敗');
-      Alert.alert('匯入失敗', '請確認檔案格式是否正確', [
+      Alert.alert('匯入失敗', describeImportError(error), [
         { text: '確定', onPress: reset },
       ]);
     }

@@ -8,7 +8,7 @@
 
 - 儲存庫根目錄：/Users/mimi/Documents/SPARKFIT
 - 標準啟動路徑：`RUN_START_COMMAND=1 ./init.sh`（實際指令見 init.sh 的 START_CMD）
-- 標準驗證路徑：./init.sh（pnpm install + pnpm test；2026-07-23 為 41 tests passed；另有 pnpm typecheck）
+- 標準驗證路徑：./init.sh（pnpm install + pnpm test；2026-11-09 為 119 tests passed；另有 pnpm typecheck）
 - monetization-001：passing；AdMob／RevenueCat 已設定並**已實機驗證購買成功**（RevenueCat 官方事故已於 7/31 解決）；順帶修好 `useProGate.ts` 一個真實 bug（見工作階段 019）
 - appstore-001：passing（但 App 仍未上架，Apple 審查持續拉鋸中）；proactively 修復訂閱付費畫面缺 Apple Guideline 3.1.2(c) 必要資訊（跟 SPARKSHAPE 被拒的原因同一套範本缺口），Build 4 重新送審後 2026-08-10 收到新一輪拒絕——**Guideline 2.1 Information Needed**（非文案/程式碼問題，同一天 SPARKPLATE/SPARKSHAPE 也收到一樣的拒絕原因）：Apple 要求在「App 審查資訊→備註」補充裝置清單、App 說明、外部服務清單、地區差異、IAP 導覽方式，並附上實體裝置螢幕錄影；2026-08-19 使用者用 iPhone 17 錄了螢幕錄影（`assets/images/ScreenRecording_08-19-2026 13-07-55_1.mp4`，涵蓋主畫面啟動、核心功能瀏覽含新增數據表單、實際點「訂閱」跳出購買確認彈窗後安全取消兩次），Claude 用 ffmpeg 壓縮到 3.9MB、寫好備註文字並上傳，已重新提交至 App 審查，狀態變成「等待審查」
 - **2026-09-22 重大變更：App 已遷移到全新 bundle ID `com.sparkscale.app` / 全新 Apple ID `6814699374`**（舊 Apple ID `6793043215`、舊 bundle `com.sparkfit.app` 已棄用但保留，改名為「SPARK SCALE（舊）」）。根因：舊記錄因先前工作階段只改了 App 顯示名稱，底層 bundle ID 仍是 `com.sparkfit.app`，被 Apple Guideline 4.1(a) Copycat 判定與其他已上架 App 撞名而反覆拒絕；bundle ID 建立後不可變更，故整套遷移到新 App 記錄（含新 RevenueCat App 綁定、新 Public API Key `appl_LdlUdHizyufsAJLaTjgsasWaiQI`）。`app.json`/`eas.json`/`src/constants/monetization.ts` 皆已改用新值並已 build+submit 成功。App Store Connect 新記錄的 App 資訊、中英文 Store 描述、截圖、隱私權政策 URL（逐 locale）、訂閱群組與兩個訂閱項目皆已搬遷完成，已合併提交（App 版本+訂閱群組+2 個訂閱項目共 4 項）並顯示「已提交 4 個項目」，狀態為「正在等待審查」
@@ -22,6 +22,18 @@
 - Android release APK 本地建置已知隱患：`android/`（gitignored、由 `expo prebuild` 產生）曾長期未跟著 `app.json` 更新重新生成，導致累積 3 個潛在問題（AdMob meta-data 缺失、splash 缺 image、`softwareKeyboardLayoutMode` 值不合法），已於工作階段 020 全部修掉並改成每次本地建置前先 `rm -rf android && npx expo prebuild --platform android` 再 `assembleRelease`，避免舊 native 專案殘留
 
 ## 工作階段日誌
+
+### 工作階段 031
+
+- 日期：2026-11-09
+- 本輪目標：調查「同一個 App 開關後畫面變舊版」；修正 Android 匯入備份（覆蓋）失敗
+- 已完成：
+  - 畫面變舊版：非程式問題。舊版面（BMI/肌肉重/體年齡）只存在於 com.sparkfit.app 的 APK（最後 8/21），com.sparkscale.app 的 Android APK 全在 11/7 14:03 之後、皆為新版面；EAS 無任何已發布 OTA，本機 APK 無 channel header 也抓不到更新。使用者確認手機上確實有兩個同名 App，已刪除舊的 com.sparkfit.app
+  - 匯入備份：失敗停在 30%（解析已通過），推斷覆蓋模式在 DELETE 階段即拋錯；原 catch 一律顯示「請確認檔案格式」並吞掉真正錯誤。新增 `src/utils/backupImport.ts`（parseBackup / importMeasurements / describeImportError），整個覆蓋/合併包進 `withTransactionAsync`，失敗整批 rollback；略過缺 date 的紀錄；非格式錯誤時 Alert 顯示真實錯誤訊息並 console.warn。測試 `src/__tests__/utils/backupImport.test.ts`（11 項，先紅後綠）
+  - APK：`SPARK-Builds/SPARK SCALE/sparkscale-v1.0.0-20261109-2202-backup-import-fix.apk`（com.sparkscale.app；build-apk 腳本預設放到 SPARKFIT/ 資料夾，已手動搬移改名）
+- 執行過的驗證：`pnpm test`（119 passed）、`pnpm typecheck`；aapt 確認套件 ID
+- 已知風險或未解決問題：使用者以新 APK 重試「覆蓋」匯入已成功（原 DELETE 失敗的確切根因未取得錯誤訊息，改用交易後未再重現）
+- 下一步最佳動作：考慮讓 build-apk 對本專案輸出到 `SPARK SCALE/` 資料夾
 
 ### 工作階段 030
 
